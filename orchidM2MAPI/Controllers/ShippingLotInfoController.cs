@@ -25,6 +25,8 @@ namespace orchidM2MAPI.Controllers
         [Route("shippinglotinfo/{location}/{shipperNo}")]
         public async Task<ActionResult<List<ShippingLotInfo>>> GetShippingLotInfo(string location, string shipperNo)
         {
+            //Sample Call = https://localhost:44398/api/shippinglotinfo/shippinglotinfo/010/138392
+
             return await _shippingLotInfoData.GetShippingLotInfo(location, shipperNo);
         }
     }
