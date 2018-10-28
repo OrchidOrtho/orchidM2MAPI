@@ -27,6 +27,7 @@ namespace orchidM2MAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddTransient<IItemDataProvider, ItemDataProvider>();
+            services.AddTransient<IShippingLotInfoDataProvider, ShippingLotInfoDataProvider>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
