@@ -43,7 +43,6 @@ namespace orchidM2MAPI
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
             app.UseMvc();
         }
     }
