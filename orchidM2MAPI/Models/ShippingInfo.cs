@@ -22,5 +22,7 @@ namespace orchidM2MAPI.Models
         public string CustomerPOLineNumber { get; set; }
         public string CustomerNumber { get; set; }
         public string SalesOrderLineNumber { get; set; }
+        public string fjobno { get; set; }
+        public string LASRETCH { get; set; }
     }
 }
