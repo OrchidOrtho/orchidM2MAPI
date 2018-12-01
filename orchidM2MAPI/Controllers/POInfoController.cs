@@ -22,13 +22,13 @@ namespace orchidM2MAPI.Controllers
 
 
         [HttpGet]
-        [Route("poinfo/{location}/{poNo}/{poItemNo}")]
-        public async Task<ActionResult<POInfo>> GetPOInfo(string location, string poNo, string poItemNo)
+        [Route("poinfo/{location}/{poNo}/{poItemReleaseNo}")]
+        public async Task<ActionResult<POInfo>> GetPOInfo(string location, string poNo, string poItemReleaseNo)
         {
 
-            //Sample Call = https://localhost:44398/api/poinfo/poinfo/010/057195/1
+            //Sample Call = https://localhost:44398/api/poinfo/poinfo/010/056967/4
 
-            return await _poInfoData.GetPOInfo(location, poNo, poItemNo);
+            return await _poInfoData.GetPOInfo(location, poNo, poItemReleaseNo);
         }
     }
 }

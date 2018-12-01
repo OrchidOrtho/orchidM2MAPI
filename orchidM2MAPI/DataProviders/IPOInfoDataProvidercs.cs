@@ -8,7 +8,7 @@ namespace orchidM2MAPI.DataProviders
 {
     public interface IPOInfoDataProvider
     {
-        Task<POInfo> GetPOInfo(string location, string poNo, string poItemNo);
+        Task<POInfo> GetPOInfo(string location, string poNo, string poItemReleaseNo);
 
     }
 }
