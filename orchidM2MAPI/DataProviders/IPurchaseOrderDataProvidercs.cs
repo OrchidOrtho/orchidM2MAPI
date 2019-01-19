@@ -6,9 +6,9 @@ using orchidM2MAPI.Models;
 
 namespace orchidM2MAPI.DataProviders
 {
-    public interface IPOInfoDataProvider
+    public interface IPurchaseOrderDataProvider
     {
-        Task<POInfo> GetPOInfo(string location, string poNo, string poItemReleaseNo);
+        Task<PurchaseOrder> GetPurchaseOrder(string location, string poNo, string poItemReleaseNo);
 
     }
 }

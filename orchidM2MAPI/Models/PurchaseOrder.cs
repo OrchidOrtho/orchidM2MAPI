@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace orchidM2MAPI.Models
 {
-    public class POInfo
+    public class PurchaseOrder
     {
         public string fpono { get; set; }
         public string fstatus { get; set; }

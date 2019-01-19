@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
@@ -26,8 +22,9 @@ namespace orchidM2MAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddTransient<IPOInfoDataProvider, POInfoDataProvider>();
-            services.AddTransient<IItemDataProvider, ItemDataProvider>();
+            services.AddTransient<IJobDataProvider, JobDataProvider>();
+            services.AddTransient<IPurchaseOrderDataProvider, PurchaseOrderDataProvider>();
+            services.AddTransient<IPartDataProvider, PartDataProvider>();
             services.AddTransient<IShippingInfoDataProvider, ShippingInfoDataProvider>();
             services.AddTransient<IShippingLotInfoDataProvider, ShippingLotInfoDataProvider>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);

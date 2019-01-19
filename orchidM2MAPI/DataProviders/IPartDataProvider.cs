@@ -6,9 +6,10 @@ using orchidM2MAPI.Models;
 
 namespace orchidM2MAPI.DataProviders
 {
-    public interface IItemDataProvider
+    public interface IPartDataProvider
     {
-        Task<Item> GetItem(string location, string partNo, string rev);
+        Task<Part> GetPart(string location, string partNo, string rev);
+        Task<List<Part>> GetPart(string location, string partNo);
 
     }
 }
