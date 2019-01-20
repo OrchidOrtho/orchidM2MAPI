@@ -9,7 +9,7 @@ using orchidM2MAPI.Models;
 
 namespace orchidM2MAPI.Controllers
 {
-    [Route("api/part")]
+    [Route("api/[controller]")]
     [ApiController]
     public class PartController : ControllerBase
     {

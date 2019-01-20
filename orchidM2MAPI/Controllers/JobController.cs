@@ -9,7 +9,7 @@ using orchidM2MAPI.Models;
 
 namespace orchidM2MAPI.Controllers
 {
-    [Route("api/job")]
+    [Route("api/[controller]")]
     [ApiController]
     public class JobController : ControllerBase
     {

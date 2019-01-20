@@ -12,18 +12,18 @@ namespace orchidM2MAPI.DataProviders
 {
     public class PartDataProvider : IPartDataProvider
     {
-        private readonly IConfiguration _config;
+        private readonly IConfigurationRoot _config;
 
-        public PartDataProvider(IConfiguration config)
+        public PartDataProvider(IConfigurationRoot config)
         {
             _config = config;
         }
 
         public IDbConnection Connection(string location)
         {
-
-            return new SqlConnection(_config.GetConnectionString(location));
-
+            string configSection = "ConnectionStrings:" + location;
+            string connectionString = _config[configSection];
+            return new SqlConnection(connectionString);
         }
 
         public async Task<Part> GetPart(string location, string partNo, string rev)

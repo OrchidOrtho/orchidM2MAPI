@@ -12,17 +12,18 @@ namespace orchidM2MAPI.DataProviders
 {
     public class PurchaseOrderDataProvider : IPurchaseOrderDataProvider
     {
-        private readonly IConfiguration _config;
+        private readonly IConfigurationRoot _config;
 
-        public PurchaseOrderDataProvider(IConfiguration config)
+        public PurchaseOrderDataProvider(IConfigurationRoot config)
         {
             _config = config;
         }
 
         public IDbConnection Connection(string location)
         {
-
-            return new SqlConnection(_config.GetConnectionString(location));
+            string configSection = "ConnectionStrings:" + location;
+            string connectionString = _config[configSection];
+            return new SqlConnection(connectionString);
 
         }
 

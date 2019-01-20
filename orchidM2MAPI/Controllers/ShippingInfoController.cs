@@ -22,10 +22,10 @@ namespace orchidM2MAPI.Controllers
 
 
         [HttpGet]
-        [Route("shippinginfo/{location}/{shipperNo}")]
+        [Route("{location}/{shipperNo}")]
         public async Task<ActionResult<ShippingAllInfo>> GetShippingLotInfo(string location, string shipperNo)
         {
-            //Sample Call = https://localhost:44398/api/shippinginfo/shippinginfo/010/138392
+            //Sample Call = https://localhost:44398/api/shippinginfo/010/138392
 
             return await _shippingInfoData.GetShippingInfo(location, shipperNo);
         }
