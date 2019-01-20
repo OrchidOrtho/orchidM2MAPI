@@ -111,7 +111,7 @@ namespace orchidM2MAPI
             services.AddTransient<IPartDataProvider, PartDataProvider>();
             services.AddTransient<IShippingInfoDataProvider, ShippingInfoDataProvider>();
             services.AddTransient<IShippingLotInfoDataProvider, ShippingLotInfoDataProvider>();
-
+            services.AddTransient<IReceivingDataProvider, ReceivingDataProvider>();
         }
 
         private void ConfigureHSTS(IServiceCollection services)
