@@ -9,8 +9,9 @@ using orchidM2MAPI.Models;
 
 namespace orchidM2MAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
+    [ApiVersion("1.0")]
     public class JobController : ControllerBase
     {
         private readonly IJobDataProvider _jobData;
@@ -23,6 +24,7 @@ namespace orchidM2MAPI.Controllers
 
         [HttpGet]
         [Route("{location}/{jobNo}")]
+        [ProducesResponseType(typeof(Job), 200)]
         public async Task<ActionResult<Job>> GetJob(string location, string jobNo)
         {
             return await _jobData.GetJob(location, jobNo);

@@ -9,8 +9,9 @@ using orchidM2MAPI.Models;
 
 namespace orchidM2MAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
+    [ApiVersion("1.0")]
     public class ShippingLotInfoController : ControllerBase
     {
         private readonly IShippingLotInfoDataProvider _shippingLotInfoData;

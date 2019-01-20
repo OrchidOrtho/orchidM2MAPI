@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSwag.AspNetCore;
@@ -54,7 +53,7 @@ namespace orchidM2MAPI
 
             if (env.IsProduction())
             {
-                //builder.AddAzureKeyVault(Configuration["KeyVaultName"]);
+                builder.AddAzureKeyVault(Configuration["KeyVaultName"]);
                 Configuration = builder.Build();
             }
         }
@@ -76,7 +75,6 @@ namespace orchidM2MAPI
             ConfigureHealth(services);
             ConfigureOpenApi(services);
             ConfigureApiOptions(services);
-            ConfigureHttpClients(services);
             ConfigureVersioning(services);
             ConfigureApplicationInsights(services);
             ConfigureHSTS(services);
@@ -89,6 +87,7 @@ namespace orchidM2MAPI
             services.AddTransient<IPartDataProvider, PartDataProvider>();
             services.AddTransient<IShippingInfoDataProvider, ShippingInfoDataProvider>();
             services.AddTransient<IShippingLotInfoDataProvider, ShippingLotInfoDataProvider>();
+
         }
 
         private void ConfigureHSTS(IServiceCollection services)
@@ -136,17 +135,6 @@ namespace orchidM2MAPI
             policyRegistry.Add("timeout", timeoutPolicy);
         }
 
-        private void ConfigureHttpClients(IServiceCollection services)
-        {
-            services.AddHttpClient("Genderize", options =>
-            {
-                options.Timeout = TimeSpan.FromMilliseconds(15000);
-                options.DefaultRequestHeaders.Add("ClientFactory", "Check");
-            })
-            .AddPolicyHandlerFromRegistry("timeout")
-            .AddTransientHttpErrorPolicy(p => p.RetryAsync(3));
-        }
-
         private void ConfigureApiOptions(IServiceCollection services)
         {
             services.Configure<ApiBehaviorOptions>(options =>
@@ -175,23 +163,24 @@ namespace orchidM2MAPI
 
         private void ConfigureHealth(IServiceCollection services)
         {
-            services.AddHealthChecks(checks =>
-            {
-                // Use feature toggle to add this functionality
-                var feature = services.BuildServiceProvider().GetRequiredService<AdvancedHealthFeature>();
-                if (feature.FeatureEnabled)
-                {
-                    checks.AddHealthCheckGroup(
-                        "memory",
-                        group => group
-                            .AddPrivateMemorySizeCheck(200000000) // Maximum private memory
-                            .AddVirtualMemorySizeCheck(3000000000000)
-                            .AddWorkingSetCheck(200000000),
-                        CheckStatus.Unhealthy
-                    );
-                }
-            });
+            //services.AddHealthChecks(checks =>
+            //{
+            //    // Use feature toggle to add this functionality
+            //    var feature = services.BuildServiceProvider().GetRequiredService<AdvancedHealthFeature>();
+            //    if (feature.FeatureEnabled)
+            //    {
+            //        checks.AddHealthCheckGroup(
+            //            "memory",
+            //            group => group
+            //                .AddPrivateMemorySizeCheck(200000000) // Maximum private memory
+            //                .AddVirtualMemorySizeCheck(3000000000000)
+            //                .AddWorkingSetCheck(200000000),
+            //            CheckStatus.Unhealthy
+            //        );
+            //    }
+            //});
         }
+
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
@@ -205,22 +194,23 @@ namespace orchidM2MAPI
             {
                 app.UseDeveloperExceptionPage();
                 // Do not expose Swagger interface in production
-                app.UseSwaggerUi3(typeof(Startup).GetTypeInfo().Assembly, settings =>
-                {
-                    settings.DocumentPath = "/swagger/v2/swagger.json";
-                    settings.EnableTryItOut = true;
-                    settings.DocExpansion = "list";
-                    settings.PostProcess = document =>
-                    {
-                        document.BasePath = "/";
-                    };
-                    settings.GeneratorSettings.Description = "Building Web APIs Workshop Demo Web API";
-                    settings.GeneratorSettings.Title = "Genealogy API";
-                    settings.GeneratorSettings.Version = "2.0";
-                    settings.GeneratorSettings.OperationProcessors.Add(
-                        new ApiVersionProcessor() { IncludedVersions = new[] { "2.0" } }
-                    );
-                });
+                //app.UseSwaggerUi3(typeof(Startup).GetTypeInfo().Assembly, settings =>
+                //{
+                //    settings.DocumentPath = "/swagger/v2/swagger.json";
+                //    settings.EnableTryItOut = true;
+                //    settings.DocExpansion = "list";
+                //    settings.PostProcess = document =>
+                //    {
+                //        document.BasePath = "/";
+                //    };
+                //    settings.GeneratorSettings.Description = "Building Web APIs Workshop Demo Web API";
+                //    settings.GeneratorSettings.Title = "Genealogy API";
+                //    settings.GeneratorSettings.Version = "2.0";
+                //    settings.GeneratorSettings.OperationProcessors.Add(
+                //        new ApiVersionProcessor() { IncludedVersions = new[] { "2.0" } }
+                //    );
+                //});
+
 
                 app.UseSwaggerUi3(typeof(Startup).GetTypeInfo().Assembly, settings =>
                 {
@@ -231,8 +221,8 @@ namespace orchidM2MAPI
                     {
                         document.BasePath = "/";
                     };
-                    settings.GeneratorSettings.Description = "Building Web APIs Workshop Demo Web API";
-                    settings.GeneratorSettings.Title = "Genealogy API";
+                    settings.GeneratorSettings.Description = "Orchid ERP API";
+                    settings.GeneratorSettings.Title = "Orchid ERP API";
                     settings.GeneratorSettings.Version = "1.0";
                     settings.GeneratorSettings.OperationProcessors.Add(
                         new ApiVersionProcessor() { IncludedVersions = new[] { "1.0" } }
