@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace orchidM2MAPI.DataProviders
 {
-    public interface IShippingInfoDataProvider
+    public interface IShippingDataProvider
     {
-        Task<ShippingAllInfo> GetShippingInfo(string location, string shipperNo);
+        Task<Shipping> GetShipping(string location, string shipperNo);
     }
 }

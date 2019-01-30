@@ -12,23 +12,23 @@ namespace orchidM2MAPI.Controllers
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     [ApiVersion("1.0")]
-    public class ShippingInfoController : ControllerBase
+    public class ShippingController : ControllerBase
     {
-        private readonly IShippingInfoDataProvider _shippingInfoData;
+        private readonly IShippingDataProvider _shippingData;
 
-        public ShippingInfoController(IShippingInfoDataProvider shippingInfoData)
+        public ShippingController(IShippingDataProvider shippingData)
         {
-            _shippingInfoData = shippingInfoData;
+            _shippingData = shippingData;
         }
 
 
         [HttpGet]
         [Route("{location}/{shipperNo}")]
-        public async Task<ActionResult<ShippingAllInfo>> GetShippingLotInfo(string location, string shipperNo)
+        public async Task<ActionResult<Shipping>> GetShipping(string location, string shipperNo)
         {
             //Sample Call = https://localhost:44398/api/shippinginfo/010/138392
 
-            return await _shippingInfoData.GetShippingInfo(location, shipperNo);
+            return await _shippingData.GetShipping(location, shipperNo);
         }
     }
 }

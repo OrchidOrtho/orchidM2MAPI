@@ -7,16 +7,19 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using orchidM2MAPI.Models;
 using Dapper;
+using Microsoft.Extensions.Logging;
 
 namespace orchidM2MAPI.DataProviders
 {
     public class JobDataProvider : IJobDataProvider
     {
         private readonly IConfigurationRoot _config;
+        private readonly ILoggerFactory _logger;
 
-        public JobDataProvider(IConfigurationRoot config)
+        public JobDataProvider(IConfigurationRoot config, ILoggerFactory logger)
         {
             _config = config;
+            _logger = logger;
         }
 
         public IDbConnection Connection(string location)
@@ -29,14 +32,23 @@ namespace orchidM2MAPI.DataProviders
 
         public async Task<Job> GetJob(string location, string JobNo)
         {
-            using (IDbConnection conn = Connection(location))
+            try
             {
-                string sQuery = "SELECT dbo.jomast.fjobno AS JobNo, RTRIM(dbo.jomast.fpartno) AS PartNo, RTRIM(dbo.jomast.fpartrev) AS PartRev, RTRIM(dbo.jomast.fac) AS Facility, RTRIM(dbo.inmast.fgroup) AS PartFamily FROM dbo.jomast INNER JOIN dbo.inmast ON dbo.jomast.fpartno = dbo.inmast.fpartno AND dbo.jomast.fpartrev = dbo.inmast.frev AND dbo.jomast.fac = dbo.inmast.fac WHERE dbo.jomast.fjobno = @jobNo ";
-                conn.Open();
-                var result = await conn.QueryAsync<Job>(sQuery, new { jobNo = JobNo });
+                using (IDbConnection conn = Connection(location))
+                {
+                    string sQuery = "SELECT dbo.jomast.fjobno AS JobNo, RTRIM(dbo.jomast.fpartno) AS PartNo, RTRIM(dbo.jomast.fpartrev) AS PartRev, RTRIM(dbo.jomast.fac) AS Facility, RTRIM(dbo.inmast.fgroup) AS PartFamily FROM dbo.jomast INNER JOIN dbo.inmast ON dbo.jomast.fpartno = dbo.inmast.fpartno AND dbo.jomast.fpartrev = dbo.inmast.frev AND dbo.jomast.fac = dbo.inmast.fac WHERE dbo.jomast.fjobno = @jobNo ";
+                    conn.Open();
+                    var result = await conn.QueryAsync<Job>(sQuery, new { jobNo = JobNo });
 
-                return result.FirstOrDefault();
+                    return result.FirstOrDefault();
+                }
             }
+            catch (Exception ex)
+            {
+                _logger.CreateLogger("error").Log(LogLevel.Error, ex.Message);
+                return null;
+            }
+
         }
 
     }

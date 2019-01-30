@@ -56,7 +56,7 @@ namespace orchidM2MAPI
 
             if (env.IsProduction())
             {
-                builder.AddAzureKeyVault(Configuration["KeyVaultName"]);
+                //builder.AddAzureKeyVault(Configuration["KeyVaultName"]);
                 Configuration = builder.Build();
             }
         }
@@ -109,8 +109,7 @@ namespace orchidM2MAPI
             services.AddTransient<IJobDataProvider, JobDataProvider>();
             services.AddTransient<IPurchaseOrderDataProvider, PurchaseOrderDataProvider>();
             services.AddTransient<IPartDataProvider, PartDataProvider>();
-            services.AddTransient<IShippingInfoDataProvider, ShippingInfoDataProvider>();
-            services.AddTransient<IShippingLotInfoDataProvider, ShippingLotInfoDataProvider>();
+            services.AddTransient<IShippingDataProvider, ShippingDataProvider>();
             services.AddTransient<IReceivingDataProvider, ReceivingDataProvider>();
         }
 
@@ -235,29 +234,29 @@ namespace orchidM2MAPI
                 //    );
                 //});
 
-
-                app.UseSwaggerUi3(typeof(Startup).GetTypeInfo().Assembly, settings =>
-                {
-                    settings.DocumentPath = "/swagger/v1/swagger.json";
-                    settings.EnableTryItOut = true;
-                    settings.DocExpansion = "list";
-                    settings.PostProcess = document =>
-                    {
-                        document.BasePath = "/";
-                    };
-                    settings.GeneratorSettings.Description = "Orchid ERP API";
-                    settings.GeneratorSettings.Title = "Orchid ERP API";
-                    settings.GeneratorSettings.Version = "1.0";
-                    settings.GeneratorSettings.OperationProcessors.Add(
-                        new ApiVersionProcessor() { IncludedVersions = new[] { "1.0" } }
-                    );
-                });
             }
             else
             {
                 app.UseHsts();
-                app.UseHttpsRedirection();
+                //app.UseHttpsRedirection();
             }
+
+            app.UseSwaggerUi3(typeof(Startup).GetTypeInfo().Assembly, settings =>
+            {
+                settings.DocumentPath = "/swagger/v1/swagger.json";
+                settings.EnableTryItOut = true;
+                settings.DocExpansion = "list";
+                settings.PostProcess = document =>
+                {
+                    document.BasePath = "/";
+                };
+                settings.GeneratorSettings.Description = "Orchid ERP API";
+                settings.GeneratorSettings.Title = "Orchid ERP API";
+                settings.GeneratorSettings.Version = "1.0";
+                settings.GeneratorSettings.OperationProcessors.Add(
+                    new ApiVersionProcessor() { IncludedVersions = new[] { "1.0" } }
+                );
+            });
 
             app.UseMvcWithDefaultRoute();
         }
