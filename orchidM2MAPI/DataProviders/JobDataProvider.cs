@@ -34,7 +34,20 @@ namespace orchidM2MAPI.DataProviders
         {
             try
             {
-                string sQuery = "SELECT        dbo.jomast.identity_column AS JobId, dbo.jomast.fjobno AS JobNo, dbo.jomast.fpartno AS PartNo, dbo.jomast.fpartrev AS PartRev, dbo.jomast.ftype AS JobType, dbo.jomast.fstatus AS JobStatus,                          dbo.jomast.fddue_date AS JobDueDate, dbo.jomast.fquantity AS JobQuantity, dbo.jomast.fjob_mem AS JobComments, dbo.joitem.fdescmemo AS JobMemo, dbo.joitem.fdesc AS PartDesc,                          dbo.jodrtg.identity_column AS JobRouteStepId, dbo.jodrtg.foperno AS OperationNo, dbo.jodrtg.fpro_id AS WorkCenterNo, dbo.inwork.fcpro_name AS WorkCenterName, dbo.jodrtg.fnqty_comp AS QuantityCompleted,                          dbo.jodrtg.fopermemo AS OperationMemo, dbo.jodrtg.fsetuptime AS EstSetupTime, dbo.jodrtg.fuprodtime AS EstProductionTimePerUnit FROM            dbo.jodrtg RIGHT OUTER JOIN                          dbo.joitem INNER JOIN                          dbo.jomast ON dbo.joitem.fjobno = dbo.jomast.fjobno AND dbo.joitem.fpartno = dbo.jomast.fpartno AND dbo.joitem.fpartrev = dbo.jomast.fpartrev ON dbo.jodrtg.fjobno = dbo.jomast.fjobno LEFT OUTER JOIN                          dbo.inwork ON dbo.jodrtg.fpro_id = dbo.inwork.fcpro_id WHERE        (dbo.jomast.fjobno = @jobNo)";
+                string sQuery = "";
+
+                // Retrieve shipping info
+                switch (location)
+                {
+                    case "072":
+                        //Syteline Query
+                        sQuery = "SELECT        TOP (100) PERCENT dbo.job.job, dbo.job.suffix, dbo.jobroute.oper_num, dbo.job.item, dbo.jobroute.wc, dbo.wc.description FROM            dbo.jobroute INNER JOIN                          dbo.job ON dbo.jobroute.job = dbo.job.job AND dbo.jobroute.suffix = dbo.job.suffix INNER JOIN                          dbo.wc ON dbo.jobroute.wc = dbo.wc.wc WHERE        (dbo.job.job = @jobNo) AND (dbo.job.suffix = 0001) ORDER BY dbo.job.suffix, dbo.job.job_date DESC, dbo.jobroute.oper_num";
+                        break;
+                    default:
+                        sQuery = "SELECT        dbo.jomast.identity_column AS JobId, dbo.jomast.fjobno AS JobNo, dbo.jomast.fpartno AS PartNo, dbo.jomast.fpartrev AS PartRev, dbo.jomast.ftype AS JobType, dbo.jomast.fstatus AS JobStatus,                          dbo.jomast.fddue_date AS JobDueDate, dbo.jomast.fquantity AS JobQuantity, dbo.jomast.fjob_mem AS JobComments, dbo.joitem.fdescmemo AS JobMemo, dbo.joitem.fdesc AS PartDesc,                          dbo.jodrtg.identity_column AS JobRouteStepId, dbo.jodrtg.foperno AS OperationNo, dbo.jodrtg.fpro_id AS WorkCenterNo, dbo.inwork.fcpro_name AS WorkCenterName, dbo.jodrtg.fnqty_comp AS QuantityCompleted,                          dbo.jodrtg.fopermemo AS OperationMemo, dbo.jodrtg.fsetuptime AS EstSetupTime, dbo.jodrtg.fuprodtime AS EstProductionTimePerUnit FROM            dbo.jodrtg RIGHT OUTER JOIN                          dbo.joitem INNER JOIN                          dbo.jomast ON dbo.joitem.fjobno = dbo.jomast.fjobno AND dbo.joitem.fpartno = dbo.jomast.fpartno AND dbo.joitem.fpartrev = dbo.jomast.fpartrev ON dbo.jodrtg.fjobno = dbo.jomast.fjobno LEFT OUTER JOIN                          dbo.inwork ON dbo.jodrtg.fpro_id = dbo.inwork.fcpro_id WHERE        (dbo.jomast.fjobno = @jobNo)";
+                        break;
+                }
+
 
                 using (var connection = Connection(location))
                 {
