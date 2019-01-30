@@ -34,13 +34,37 @@ namespace orchidM2MAPI.DataProviders
         {
             try
             {
-                using (IDbConnection conn = Connection(location))
-                {
-                    string sQuery = "SELECT dbo.jomast.fjobno AS JobNo, RTRIM(dbo.jomast.fpartno) AS PartNo, RTRIM(dbo.jomast.fpartrev) AS PartRev, RTRIM(dbo.jomast.fac) AS Facility, RTRIM(dbo.inmast.fgroup) AS PartFamily FROM dbo.jomast INNER JOIN dbo.inmast ON dbo.jomast.fpartno = dbo.inmast.fpartno AND dbo.jomast.fpartrev = dbo.inmast.frev AND dbo.jomast.fac = dbo.inmast.fac WHERE dbo.jomast.fjobno = @jobNo ";
-                    conn.Open();
-                    var result = await conn.QueryAsync<Job>(sQuery, new { jobNo = JobNo });
+                string sQuery = "SELECT        dbo.jomast.identity_column AS JobId, dbo.jomast.fjobno AS JobNo, dbo.jomast.fpartno AS PartNo, dbo.jomast.fpartrev AS PartRev, dbo.jomast.ftype AS JobType, dbo.jomast.fstatus AS JobStatus,                          dbo.jomast.fddue_date AS JobDueDate, dbo.jomast.fquantity AS JobQuantity, dbo.jomast.fjob_mem AS JobComments, dbo.joitem.fdescmemo AS JobMemo, dbo.joitem.fdesc AS PartDesc,                          dbo.jodrtg.identity_column AS JobRouteStepId, dbo.jodrtg.foperno AS OperationNo, dbo.jodrtg.fpro_id AS WorkCenterNo, dbo.inwork.fcpro_name AS WorkCenterName, dbo.jodrtg.fnqty_comp AS QuantityCompleted,                          dbo.jodrtg.fopermemo AS OperationMemo, dbo.jodrtg.fsetuptime AS EstSetupTime, dbo.jodrtg.fuprodtime AS EstProductionTimePerUnit FROM            dbo.jodrtg RIGHT OUTER JOIN                          dbo.joitem INNER JOIN                          dbo.jomast ON dbo.joitem.fjobno = dbo.jomast.fjobno AND dbo.joitem.fpartno = dbo.jomast.fpartno AND dbo.joitem.fpartrev = dbo.jomast.fpartrev ON dbo.jodrtg.fjobno = dbo.jomast.fjobno LEFT OUTER JOIN                          dbo.inwork ON dbo.jodrtg.fpro_id = dbo.inwork.fcpro_id WHERE        (dbo.jomast.fjobno = @jobNo)";
 
-                    return result.FirstOrDefault();
+                using (var connection = Connection(location))
+                {
+                    var jobDictionary = new Dictionary<int, Job>();
+
+
+                    var list = connection.Query<Job, JobRouteStep, Job>(
+                        sQuery,
+                        (job, jobroutestep) =>
+                        {
+                            Job jobEntry;
+
+                            if (!jobDictionary.TryGetValue(job.JobId, out jobEntry))
+                            {
+                                jobEntry = job;
+                                jobEntry.Routing = new List<JobRouteStep>();
+                                jobDictionary.Add(jobEntry.JobId, jobEntry);
+                            }
+                            jobEntry.Routing.Add(jobroutestep);
+
+
+                            return jobEntry;
+                        },
+                        param: new { jobNo = JobNo },
+                        splitOn: "JobRouteStepId")
+                    .Distinct()
+                    .ToList();
+
+                    return jobDictionary.FirstOrDefault().Value;
+
                 }
             }
             catch (Exception ex)
