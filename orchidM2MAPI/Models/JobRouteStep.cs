@@ -18,7 +18,8 @@ namespace orchidM2MAPI.Models
         public string OperationMemo { get; set; }
         public float EstSetupTime { get; set; }
         public float EstProductionTimePerUnit { get; set; }
-
+        public DateTime StartDate { get; set; }
+        public DateTime FinishDate { get; set; }
 
     }
 }
