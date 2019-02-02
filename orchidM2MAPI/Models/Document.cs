@@ -19,6 +19,7 @@ namespace orchidM2MAPI.Models
         public string ChangeDescription { get; set; }
         public Int32 VersionMasterId { get; set; }
         public string Status { get; set; }
+        public string SiteNo { get; set; }
 
     }
 }
