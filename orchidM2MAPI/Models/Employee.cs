@@ -17,7 +17,21 @@ namespace orchidM2MAPI.Models
         public string MiddleInitial { get; set; }
         public string BusinessTitle { get; set; }
         public string SiteNo { get; set; }
+        public string Shift { get; set; }
+        public string Supervisor { get; set; }
+        public string DeptName { get; set; }
 
+        public string DepartmentName
+        {
+            get
+            {
+                if (DeptName == null)
+                    return "";
+                else
+                    return DeptName.Trim().Replace("\r", "").Replace("\n", "");
+
+            }
+        }
         public string Title
         {
             get
