@@ -29,5 +29,15 @@ namespace orchidM2MAPI.Controllers
         {
             return await _jobData.GetJob(location, jobNo);
         }
+
+        [HttpGet]
+        [Route("{location}/lots/{jobNo}")]
+        [ProducesResponseType(typeof(Job), 200)]
+        public async Task<ActionResult<Job>> GetJobLots(string location, string jobNo)
+        {
+            return await _jobData.GetJobLots(location, jobNo);
+        }
+
+
     }
 }

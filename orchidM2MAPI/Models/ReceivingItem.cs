@@ -20,6 +20,7 @@ namespace orchidM2MAPI.Models
         public string Comments { get; set; }
         public string POItemNumber { get; set; }
         public string InspectFlag { get; set; }
+        public string JobNo { get; set; }
 
         public List<ReceivingItemLot> Lots { get; set; }
     }

@@ -26,10 +26,19 @@ namespace orchidM2MAPI.Controllers
 
         [HttpGet]
         [Route("{location}/{receivingNo}")]
-        [ProducesResponseType(typeof(Job), 200)]
+        [ProducesResponseType(typeof(Receiving), 200)]
         public async Task<ActionResult<Receiving>> GetReceiving(string location, string receivingNo)
         {
             return await _receivingData.GetReceiving(location, receivingNo);
         }
+
+        [HttpGet]
+        [Route("{location}/poNo/{poNo}")]
+        [ProducesResponseType(typeof(List<Receiving>), 200)]
+        public async Task<ActionResult<List<Receiving>>> GetReceivedItems(string location, string poNo)
+        {
+            return await _receivingData.GetReceivedItems(location, poNo);
+        }
+
     }
 }

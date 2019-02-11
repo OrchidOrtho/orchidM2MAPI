@@ -88,6 +88,64 @@ namespace orchidM2MAPI.DataProviders
 
         }
 
+        public async Task<Job> GetJobLots(string location, string JobNo)
+        {
+            try
+            {
+                string sQuery = "";
+
+                // Retrieve shipping info
+                switch (location)
+                {
+                    case "072":
+                        //Syteline Query
+                        sQuery = "SELECT        TOP (100) PERCENT dbo.job.job, dbo.job.suffix, dbo.jobroute.oper_num, dbo.job.item, dbo.jobroute.wc, dbo.wc.description FROM            dbo.jobroute INNER JOIN                          dbo.job ON dbo.jobroute.job = dbo.job.job AND dbo.jobroute.suffix = dbo.job.suffix INNER JOIN                          dbo.wc ON dbo.jobroute.wc = dbo.wc.wc WHERE        (dbo.job.job = @jobNo) AND (dbo.job.suffix = 0001) ORDER BY dbo.job.suffix, dbo.job.job_date DESC, dbo.jobroute.oper_num";
+                        break;
+                    default:
+                        sQuery = "SELECT        dbo.jomast.identity_column AS JobId, dbo.jomast.fjobno AS JobNo, RTRIM(dbo.jomast.fpartno) AS PartNo, RTRIM(dbo.jomast.fpartrev) AS PartRev, dbo.jomast.ftype AS JobType, RTRIM(dbo.jomast.fstatus) AS JobStatus,                          dbo.jomast.fddue_date AS JobDueDate, dbo.jomast.fquantity AS JobQuantity, JobLots.identity_column AS JobLotId, RTRIM(JobLots.fclot) AS LotNo, JobLots.fnquantity AS LotQuantity, RTRIM(JobLots.fcmeasure) AS LotQtyUnitOfMeasure FROM            dbo.jomast LEFT OUTER JOIN                              (SELECT        fcdoc, fcpartno, fcpartrev, fclot, fnquantity, fddate, fcmeasure, identity_column, fac                                FROM            dbo.qalotc                                WHERE        (fctype = 'J') AND (fcuseindoc = '')) AS JobLots ON dbo.jomast.fjobno = JobLots.fcdoc WHERE        (dbo.jomast.fjobno = @jobNo)";
+                        break;
+                }
+
+
+                using (var connection = Connection(location))
+                {
+                    var jobDictionary = new Dictionary<int, Job>();
+
+
+                    var list = connection.Query<Job, JobLot, Job>(
+                        sQuery,
+                        (job, joblot) =>
+                        {
+                            Job jobEntry;
+
+                            if (!jobDictionary.TryGetValue(job.JobId, out jobEntry))
+                            {
+                                jobEntry = job;
+                                jobEntry.Lots = new List<JobLot>();
+                                jobDictionary.Add(jobEntry.JobId, jobEntry);
+                            }
+                            jobEntry.Lots.Add(joblot);
+
+
+                            return jobEntry;
+                        },
+                        param: new { jobNo = JobNo },
+                        splitOn: "JobLotId")
+                    .Distinct()
+                    .ToList();
+
+                    return jobDictionary.FirstOrDefault().Value;
+
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.CreateLogger("error").Log(LogLevel.Error, ex.Message);
+                return null;
+            }
+
+        }
+
     }
 }
 
