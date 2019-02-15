@@ -41,9 +41,6 @@ namespace orchidM2MAPI.DataProviders
 
                 using (var connection = Connection(location))
                 {
-                    var documentDictionary = new Dictionary<int, Document>();
-
-
                     var list = connection.Query<Document>(
                         sQuery,
                         param: new { location = location })

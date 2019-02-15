@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using orchidM2MAPI.DataProviders;
 using orchidM2MAPI.Models;
 
@@ -17,10 +18,12 @@ namespace orchidM2MAPI.Controllers
     public class ReceivingController : ControllerBase
     {
         private readonly IReceivingDataProvider _receivingData;
+        private readonly ILoggerFactory _logger;
 
-        public ReceivingController(IReceivingDataProvider receivingData)
+        public ReceivingController(IReceivingDataProvider receivingData, ILoggerFactory logger)
         {
             _receivingData = receivingData;
+            _logger = logger;
         }
 
 
@@ -38,6 +41,25 @@ namespace orchidM2MAPI.Controllers
         public async Task<ActionResult<List<Receiving>>> GetReceivedItems(string location, string poNo)
         {
             return await _receivingData.GetReceivedItems(location, poNo);
+        }
+
+        [HttpGet]
+        [Route("{location}/{lastChecked}")]
+        [ProducesResponseType(typeof(List<Receiving>), 200)]
+        public async Task<List<Receiving>> GetReceivingSinceLastChecked(string location, string lastChecked)
+        {
+            try
+            {
+                DateTime passThis = DateTime.Parse(lastChecked);
+
+                return await _receivingData.GetReceivingSinceLastChecked(location, passThis);
+            }
+            catch (Exception ex)
+            {
+                _logger.CreateLogger("error").Log(LogLevel.Error, ex.Message);
+                return null;
+            }
+
         }
 
     }

@@ -7,16 +7,20 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using orchidM2MAPI.Models;
 using Dapper;
+using Microsoft.Extensions.Logging;
 
 namespace orchidM2MAPI.DataProviders
 {
     public class ReceivingDataProvider : IReceivingDataProvider
     {
         private readonly IConfigurationRoot _config;
+        private readonly ILoggerFactory _logger;
 
-        public ReceivingDataProvider(IConfigurationRoot config)
+        public ReceivingDataProvider(IConfigurationRoot config, ILoggerFactory logger)
         {
             _config = config;
+            _logger = logger;
+
         }
 
         public IDbConnection Connection(string location)
@@ -114,6 +118,37 @@ namespace orchidM2MAPI.DataProviders
                 return receivingDictionary.Values.ToList();
             }
         }
+
+        public async Task<List<Receiving>> GetReceivingSinceLastChecked(string location, DateTime lastChecked)
+        {
+            try
+            {
+                string sQuery = "";
+
+                sQuery = "SELECT dbo.rcmast.identity_column AS ReceivingId, freceiver AS ReceiverNo, fdaterecv AS DateReceived FROM  dbo.rcmast WHERE (dbo.rcmast.fdaterecv >= @lastDateTime)";
+
+
+                using (var connection = Connection(location))
+                {
+
+                    var list = connection.Query<Receiving>(
+                        sQuery,
+                        param: new { location = location, lastDateTime = lastChecked })
+                    .ToList();
+
+                    return list;
+
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.CreateLogger("error").Log(LogLevel.Error, ex.Message);
+                return null;
+            }
+
+        }
+
+
     }
 }
 
