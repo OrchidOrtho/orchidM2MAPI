@@ -116,6 +116,7 @@ namespace orchidM2MAPI
             services.AddTransient<IEmployeeTitleDataProvider, EmployeeTitleDataProvider>();
             services.AddTransient<IDepartmentDataProvider, DepartmentDataProvider>();
             services.AddTransient<IInventoryDataProvider, InventoryDataProvider>();
+            services.AddTransient<ISalesOrderDataProvider, SalesOrderDataProvider>();
         }
 
         private void ConfigureHSTS(IServiceCollection services)
