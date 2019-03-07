@@ -28,7 +28,7 @@ namespace orchidM2MAPI.Controllers
 
 
         [HttpGet]
-        [Route("{location}/{receivingNo}")]
+        [Route("{location}/receipt/{receivingNo}")]
         [ProducesResponseType(typeof(Receiving), 200)]
         public async Task<ActionResult<Receiving>> GetReceiving(string location, string receivingNo)
         {

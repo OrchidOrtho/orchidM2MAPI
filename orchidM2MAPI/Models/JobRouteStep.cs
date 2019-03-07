@@ -14,7 +14,7 @@ namespace orchidM2MAPI.Models
         public Int32 OperationNo { get; set; }
         public string WorkCenterNo { get; set; }
         public string WorkCenterName { get; set; }
-        public float QuantityComplete { get; set; }
+        public float QuantityCompleted { get; set; }
         public string OperationMemo { get; set; }
         public float EstSetupTime { get; set; }
         public float EstProductionTimePerUnit { get; set; }
