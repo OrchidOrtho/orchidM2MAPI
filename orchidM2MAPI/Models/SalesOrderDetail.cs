@@ -23,5 +23,22 @@ namespace orchidM2MAPI.Models
         public string PartDesc { get; set; }
         public string PartGroup { get; set; }
 
+        public string TextLoc { get; set; }
+        public bool LotRequired { get; set; }
+        public string ExternalItemNo { get; set; }
+        public bool IsBlanketRelease { get; set; }
+        public float QuantityOver { get; set; }
+        public float QuantityUnder { get; set; }
+        public bool PrintMemo { get; set; }
+        public string PartClass { get; set; }
+        public string PartSource { get; set; }
+        public string DescriptionShort { get; set; }
+        public string DescriptionMemo { get; set; }
+        public string Facility { get; set; }
+        public string SourceFacility { get; set; }
+        public string UserDefinedRev { get; set; }
+        public float AlternateQuantity { get; set; }
+        public string AlternateUnitOfMeasure { get; set; }
+
     }
 }
