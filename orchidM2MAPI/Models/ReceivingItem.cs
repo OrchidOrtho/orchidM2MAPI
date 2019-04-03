@@ -21,6 +21,8 @@ namespace orchidM2MAPI.Models
         public string POItemNumber { get; set; }
         public string InspectFlag { get; set; }
         public string JobNo { get; set; }
+        public float OrderedQuantity { get; set; }
+        public string OrderedUnitofMeasure { get; set; }
 
         public List<ReceivingItemLot> Lots { get; set; }
     }
