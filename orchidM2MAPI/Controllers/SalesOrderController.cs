@@ -39,5 +39,14 @@ namespace orchidM2MAPI.Controllers
  
         }
 
+        [HttpPost]
+        [Route("{location}/")]
+        [ProducesResponseType(typeof(SalesOrder), 201)]
+        public async Task<ActionResult<SalesOrder>> UpsertSalesOrder(string location, SalesOrder so)
+        {
+            return await _soData.UpsertSalesOrder(location, so);
+
+        }
+
     }
 }

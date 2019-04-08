@@ -9,5 +9,6 @@ namespace orchidM2MAPI.DataProviders
 
         Task<SalesOrderItem> UpdateSalesOrderDetail(string location, SalesOrderItem item);
 
+        Task<SalesOrder> UpsertSalesOrder(string location, SalesOrder so);
     }
 }

@@ -11,10 +11,6 @@ namespace orchidM2MAPI.Models
         [Key]
         public Int32 SalesOrderReleaseId { get; set; }
 
-        public string InternalItemNo { get; set; }
-        public string ExternalItemNo { get; set; }
-        public string PartNo { get; set; }
-        public string PartRev { get; set; }
         public string ReleaseNo { get; set; }
         public string ShipToAddressKey { get; set; }
         public DateTime DueDate { get; set; }

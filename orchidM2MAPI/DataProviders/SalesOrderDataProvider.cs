@@ -128,6 +128,141 @@ namespace orchidM2MAPI.DataProviders
         }
 
 
+        public async Task<SalesOrder> UpsertSalesOrder(string location, SalesOrder so)
+        {
+            try
+            {
+                string sQuery = "";
+                string sNextSONoQuery = "";
+                string sNextSONoUpdateQuery = "";
+                IDbTransaction trans;
+
+                // Generate queries based on location
+                switch (location)
+                {
+                    case "072":
+                        //Syteline Query
+                        sQuery = "";
+                        break;
+                    case "080":
+                        //Need different query for 7.5
+                        if (so.IsNew)
+                        {
+                            sQuery = "INSERT INTO somast (fsono, fcustno, fcompany, fcity, fcustpono, fackdate, fcanc_dt, fcontact, fcountry, fcusrchr1, fcusrchr2, fcusrchr3, fduedate, fdusrdate1, ffax, ffob, fnusrqty1, fnusrcur1, forderdate, fpaytype, fphone, fshipvia, fshptoaddr, fsocoord, fsoldaddr, fsoldby, fstate, fstatus, fterm, fterr, fzip, fncancchrge, fackmemo, fmstreet, fmusrmemo1, fpriority, CreatedDate, ModifiedDate, fbilladdr) ";
+                            sQuery = sQuery + "VALUES (@fsono, @fcustno, @fcompany, @fcity, @fcustpono, @fackdate, @fcanc_dt, @fcontact, @fcountry, @fcusrchr1, @fcusrchr2, @fcusrchr3, @fduedate, @fdusrdate1, @ffax, @ffob, @fnusrqty1, @fnusrcur1, @forderdate, @fpaytype, @fphone, @fshipvia, @fshptoaddr, @fsocoord, @fsoldaddr, @fsoldby, @fstate, @fstatus, @fterm, @fterr, @fzip, @fncancchrge, @fackmemo, @fmstreet, @fmusrmemo1, @fpriority, @CreatedDate, @ModifiedDate, @fbilladdr)";
+
+                            sNextSONoQuery = "SELECT  fcnumber AS SalesOrderNo FROM  dbo.sysequ WHERE  (fcclass = 'SOMAST.FSONO')";
+
+                            sNextSONoUpdateQuery = "UPDATE dbo.sysequ SET fcnumber = @newSONumber WHERE  (fcclass = 'SOMAST.FSONO')";
+                        }
+                        else
+                        {
+
+                        }
+                        break;
+                    default:
+                        if (so.IsNew)
+                        {
+                            sQuery = "INSERT INTO somast (fsono, fcustno, fcompany, fcity, fcustpono, fackdate, fcanc_dt, fcontact, fcountry, fcusrchr1, fcusrchr2, fcusrchr3, fduedate, fdusrdate1, ffax, ffob, fnusrqty1, fnusrcur1, forderdate, fpaytype, fphone, fshipvia, fshptoaddr, fsocoord, fsoldaddr, fsoldby, fstate, fstatus, fterm, fterr, fzip, fackmemo, fmstreet, fmusrmemo1, fpriority) ";
+                            sQuery = sQuery + "VALUES (@fsono, @fcustno, @fcompany, @fcity, @fcustpono, @fackdate, @fcanc_dt, @fcontact, @fcountry, @fcusrchr1, @fcusrchr2, @fcusrchr3, @fduedate, @fdusrdate1, @ffax, @ffob, @fnusrqty1, @fnusrcur1, @forderdate, @fpaytype, @fphone, @fshipvia, @fshptoaddr, @fsocoord, @fsoldaddr, @fsoldby, @fstate, @fstatus, @fterm, @fterr, @fzip, @fackmemo, @fmstreet, @fmusrmemo1, @fpriority)";
+
+                            sNextSONoQuery = "SELECT  fcnumber AS SalesOrderNo FROM  dbo.sysequ WHERE  (fcclass = 'SOMAST.FSONO')";
+
+                            sNextSONoUpdateQuery = "UPDATE dbo.sysequ SET fcnumber = @newSONumber WHERE  (fcclass = 'SOMAST.FSONO')";
+                        }
+                        else
+                        {
+
+                        }
+                        break;
+                }
+
+
+                using (var connection = Connection(location))
+                {
+                    connection.Open();
+                    using (trans = connection.BeginTransaction())
+                    {
+                        if (so.IsNew)
+                        {
+                            //Get Next Sales Order Number
+                            var NextSONo = connection.QueryFirstOrDefault<SalesOrderNextNo>(sNextSONoQuery, transaction: trans);
+                            so.SalesOrderNo = NextSONo.SalesOrderNo;
+
+                            //Update the Next Sales Order Number
+                            connection.Execute(sNextSONoUpdateQuery, new { newSONumber = NextSONo.NextSalesOrderNo }, transaction: trans);
+                        }
+
+
+                        //Create the new Sales Order
+                        connection.Execute(sQuery, new
+                        {
+                            fsono = so.SalesOrderNo,
+                            fcustno = so.CustomerNo,
+                            fcompany = so.CustomerName,
+                            fcity = so.SoldToCity,
+                            fcustpono = so.CustomerPONo,
+                            fackdate = so.AcknowledgedDate == null ? DateTime.Parse("1900-01-01 00:00:00.000") : so.AcknowledgedDate,
+                            fcanc_dt = so.CancelledDate == null ? DateTime.Parse("1900-01-01 00:00:00.000") : so.CancelledDate,
+                            fcontact = so.ContactName,
+                            fcountry = so.SoldToCountry,
+                            fcusrchr1 = so.UserDefinedString1,
+                            fcusrchr2 = so.UserDefinedstring2,
+                            fcusrchr3 = so.UserDefinedString3,
+                            fduedate = so.DueDate,
+                            fdusrdate1 = so.UserDefinedDate1 == null ? DateTime.Parse("1900-01-01 00:00:00.000") : so.UserDefinedDate1,
+                            ffax = so.FaxNumber,
+                            ffob = so.FreightOnBoardPoint,
+                            fnusrqty1 = so.UserDefinedQuantity1,
+                            fnusrcur1 = so.UserDefinedCurrency1,
+                            forderdate = so.OrderDate,
+                            fpaytype = so.PaymentType,
+                            fphone = so.PhoneNumber,
+                            fshipvia = so.ShipVia,
+                            fshptoaddr = so.ShipToAddressKey,
+                            fsocoord = so.SalesOrderCoordinator,
+                            fsoldaddr = so.SoldToAddressKey,
+                            fsoldby = so.SoldBy,
+                            fstate = so.SoldToState,
+                            fstatus = so.Status,
+                            fterm = so.Terms,
+                            fterr = so.InternalSalesTerritory,
+                            fzip = so.SoldToZip,
+                            //fncancchrge = so.CustomerSONumber,
+                            fackmemo = so.SOAcknowledgeMemo,
+                            fmstreet = so.SoldToStreet,
+                            fmusrmemo1 = so.UserDefinedMemo1,
+                            fpriority = so.Priority
+                            //CreatedDate = so.CreatedDate,
+                            //ModifiedDate = so.ModifiedDate,
+                            //fbilladdr = so.BillToAddressKey
+                        }, transaction: trans);
+
+                        try
+                        {
+                            trans.Commit();
+                            connection.Close();
+                        }
+                        catch (Exception)
+                        {
+                            trans.Rollback();
+                            throw;
+                        }
+                    }
+
+                    
+                    return so;
+
+                }
+            }
+            catch (Exception ex)
+            {
+                
+                _logger.CreateLogger("error").Log(LogLevel.Error, ex.Message);
+                return null;
+            }
+        }
+
 
     }
 }
