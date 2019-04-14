@@ -112,7 +112,7 @@ namespace orchidM2MAPI.DataProviders
 
                 using (var connection = Connection(location))
                 {
-                    connection.Execute(sQuery, new {uniqueId = item.SalesOrderItemId, newDueDate = item.DueDateToShip });
+                    connection.Execute(sQuery, new { uniqueId = item.SalesOrderItemId, newDueDate = item.DueDateToShip });
                     connection.Execute(sQuery1, new { uniqueId = item.SalesOrderItemId, newDueDate = item.DueDateToShip });
 
                     return item;
@@ -132,7 +132,9 @@ namespace orchidM2MAPI.DataProviders
         {
             try
             {
-                string sQuery = "";
+                string sQuerySOInsert = "";
+                string sQuerySOItemInsert = "";
+                string sQuerySORelInsert = "";
                 string sNextSONoQuery = "";
                 string sNextSONoUpdateQuery = "";
                 IDbTransaction trans;
@@ -142,14 +144,14 @@ namespace orchidM2MAPI.DataProviders
                 {
                     case "072":
                         //Syteline Query
-                        sQuery = "";
+                        sQuerySOInsert = "";
                         break;
                     case "080":
                         //Need different query for 7.5
                         if (so.IsNew)
                         {
-                            sQuery = "INSERT INTO somast (fsono, fcustno, fcompany, fcity, fcustpono, fackdate, fcanc_dt, fcontact, fcountry, fcusrchr1, fcusrchr2, fcusrchr3, fduedate, fdusrdate1, ffax, ffob, fnusrqty1, fnusrcur1, forderdate, fpaytype, fphone, fshipvia, fshptoaddr, fsocoord, fsoldaddr, fsoldby, fstate, fstatus, fterm, fterr, fzip, fncancchrge, fackmemo, fmstreet, fmusrmemo1, fpriority, CreatedDate, ModifiedDate, fbilladdr) ";
-                            sQuery = sQuery + "VALUES (@fsono, @fcustno, @fcompany, @fcity, @fcustpono, @fackdate, @fcanc_dt, @fcontact, @fcountry, @fcusrchr1, @fcusrchr2, @fcusrchr3, @fduedate, @fdusrdate1, @ffax, @ffob, @fnusrqty1, @fnusrcur1, @forderdate, @fpaytype, @fphone, @fshipvia, @fshptoaddr, @fsocoord, @fsoldaddr, @fsoldby, @fstate, @fstatus, @fterm, @fterr, @fzip, @fncancchrge, @fackmemo, @fmstreet, @fmusrmemo1, @fpriority, @CreatedDate, @ModifiedDate, @fbilladdr)";
+                            sQuerySOInsert = "INSERT INTO somast (fsono, fcustno, fcompany, fcity, fcustpono, fackdate, fcanc_dt, fcontact, fcountry, fcusrchr1, fcusrchr2, fcusrchr3, fduedate, fdusrdate1, ffax, ffob, fnusrqty1, fnusrcur1, forderdate, fpaytype, fphone, fshipvia, fshptoaddr, fsocoord, fsoldaddr, fsoldby, fstate, fstatus, fterm, fterr, fzip, fncancchrge, fackmemo, fmstreet, fmusrmemo1, fpriority, CreatedDate, ModifiedDate, fbilladdr) ";
+                            sQuerySOInsert = sQuerySOInsert + "VALUES (@fsono, @fcustno, @fcompany, @fcity, @fcustpono, @fackdate, @fcanc_dt, @fcontact, @fcountry, @fcusrchr1, @fcusrchr2, @fcusrchr3, @fduedate, @fdusrdate1, @ffax, @ffob, @fnusrqty1, @fnusrcur1, @forderdate, @fpaytype, @fphone, @fshipvia, @fshptoaddr, @fsocoord, @fsoldaddr, @fsoldby, @fstate, @fstatus, @fterm, @fterr, @fzip, @fncancchrge, @fackmemo, @fmstreet, @fmusrmemo1, @fpriority, @CreatedDate, @ModifiedDate, @fbilladdr)";
 
                             sNextSONoQuery = "SELECT  fcnumber AS SalesOrderNo FROM  dbo.sysequ WHERE  (fcclass = 'SOMAST.FSONO')";
 
@@ -163,8 +165,14 @@ namespace orchidM2MAPI.DataProviders
                     default:
                         if (so.IsNew)
                         {
-                            sQuery = "INSERT INTO somast (fsono, fcustno, fcompany, fcity, fcustpono, fackdate, fcanc_dt, fcontact, fcountry, fcusrchr1, fcusrchr2, fcusrchr3, fduedate, fdusrdate1, ffax, ffob, fnusrqty1, fnusrcur1, forderdate, fpaytype, fphone, fshipvia, fshptoaddr, fsocoord, fsoldaddr, fsoldby, fstate, fstatus, fterm, fterr, fzip, fackmemo, fmstreet, fmusrmemo1, fpriority) ";
-                            sQuery = sQuery + "VALUES (@fsono, @fcustno, @fcompany, @fcity, @fcustpono, @fackdate, @fcanc_dt, @fcontact, @fcountry, @fcusrchr1, @fcusrchr2, @fcusrchr3, @fduedate, @fdusrdate1, @ffax, @ffob, @fnusrqty1, @fnusrcur1, @forderdate, @fpaytype, @fphone, @fshipvia, @fshptoaddr, @fsocoord, @fsoldaddr, @fsoldby, @fstate, @fstatus, @fterm, @fterr, @fzip, @fackmemo, @fmstreet, @fmusrmemo1, @fpriority)";
+                            sQuerySOInsert = "INSERT INTO somast (fsono, fcustno, fcompany, fcity, fcustpono, fackdate, fcanc_dt, fcontact, fcountry, fcusrchr1, fcusrchr2, fcusrchr3, fduedate, fdusrdate1, ffax, ffob, fnusrqty1, fnusrcur1, forderdate, fpaytype, fphone, fshipvia, fshptoaddr, fsocoord, fsoldaddr, fsoldby, fstate, fstatus, fterm, fterr, fzip, fackmemo, fmstreet, fmusrmemo1, fpriority) ";
+                            sQuerySOInsert = sQuerySOInsert + "VALUES (@fsono, @fcustno, @fcompany, @fcity, @fcustpono, @fackdate, @fcanc_dt, @fcontact, @fcountry, @fcusrchr1, @fcusrchr2, @fcusrchr3, @fduedate, @fdusrdate1, @ffax, @ffob, @fnusrqty1, @fnusrcur1, @forderdate, @fpaytype, @fphone, @fshipvia, @fshptoaddr, @fsocoord, @fsoldaddr, @fsoldby, @fstate, @fstatus, @fterm, @fterr, @fzip, @fackmemo, @fmstreet, @fmusrmemo1, @fpriority)";
+
+                            sQuerySOItemInsert = "INSERT INTO soitem (finumber, fpartno, fpartrev, fsono, fllotreqd, fautocreat, fcas_bom, fcas_rtg, fcustpart, fcustptrev, fduedate, fenumber, fgroup, fmeasure, fmultiple, fnextinum, fnextrel, fnunder, fnover, fordertype, fprintmemo, fprodcl, fquantity, fsource, fdesc, fdescmemo, fac) ";
+                            sQuerySOItemInsert = sQuerySOItemInsert + "VALUES (@finumber, @fpartno, @fpartrev, @fsono, @fllotreqd, @fautocreat, @fcas_bom, @fcas_rtg, @fcustpart, @fcustptrev, @fduedate, @fenumber, @fgroup, @fmeasure, @fmultiple, @fnextinum, @fnextrel, @fnunder, @fnover, @fordertype, @fprintmemo, @fprodcl, @fquantity, @fsource, @fdesc, @fdescmemo, @fac)";
+
+                            sQuerySORelInsert = "INSERT INTO sorels (fenumber, finumber, fpartno, fpartrev, frelease, fshptoaddr, fsono, fduedate, forderqty, fshpbefdue, fsplitshp, funetprice, flistaxabl, fdelivery, fpriority, fmasterrel) ";
+                            sQuerySORelInsert = sQuerySORelInsert + "VALUES (@fenumber, @finumber, @fpartno, @fpartrev, @frelease, @fshptoaddr, @fsono, @fduedate, @forderqty, @fshpbefdue, @fsplitshp, @funetprice, @flistaxabl, @fdelivery, @fpriority, @fmasterrel)";
 
                             sNextSONoQuery = "SELECT  fcnumber AS SalesOrderNo FROM  dbo.sysequ WHERE  (fcclass = 'SOMAST.FSONO')";
 
@@ -195,7 +203,7 @@ namespace orchidM2MAPI.DataProviders
 
 
                         //Create the new Sales Order
-                        connection.Execute(sQuery, new
+                        connection.Execute(sQuerySOInsert, new
                         {
                             fsono = so.SalesOrderNo,
                             fcustno = so.CustomerNo,
@@ -238,6 +246,67 @@ namespace orchidM2MAPI.DataProviders
                             //fbilladdr = so.BillToAddressKey
                         }, transaction: trans);
 
+                        foreach (SalesOrderItem line in so.Items)
+                        {
+                            //Create the new Sales Order Line Item
+                            connection.Execute(sQuerySOItemInsert, new
+                            {
+                                @finumber = line.InternalItemNo,
+                                @fpartno = line.PartNo,
+                                @fpartrev = line.PartRev,
+                                @fsono = so.SalesOrderNo,
+                                @fllotreqd = line.LotRequired,
+                                @fautocreat = false,
+                                @fcas_bom = false,
+                                @fcas_rtg = false,
+                                @fcustpart = line.CustomerPartNo,
+                                @fcustptrev = line.CustomerPartRev == null ? "" : line.CustomerPartRev,
+                                @fduedate = line.DueDateToShip,
+                                @fenumber = line.ExternalItemNo,
+                                @fgroup = line.PartGroup,
+                                @fmeasure = line.UnitOfMeasure,
+                                @fmultiple = line.IsBlanketRelease,
+                                @fnextinum = 0,
+                                @fnextrel = 0,
+                                @fnunder = line.QuantityUnder,
+                                @fnover = line.QuantityOver,
+                                @fordertype = "",
+                                @fprintmemo = line.PrintMemo,
+                                @fprodcl = line.PartClass,
+                                @fquantity = line.Quantity,
+                                @fsource = line.PartSource,
+                                @fdesc = line.DescriptionShort,
+                                @fdescmemo = line.DescriptionMemo == null ? "" : line.DescriptionMemo,
+                                @fac = line.Facility == null || line.Facility == "" ? "Default" : line.Facility
+
+                            }, transaction: trans);
+
+                            foreach (SalesOrderReleases rel in line.Releases)
+                            {
+                                //Create the new Sales Order Line Item
+                                connection.Execute(sQuerySORelInsert, new
+                                {
+                                    @fenumber = line.ExternalItemNo,
+                                    @finumber = line.InternalItemNo,
+                                    @fpartno = line.PartNo,
+                                    @fpartrev = line.PartRev,
+                                    @frelease = rel.IsMasterRelease ? "000" : rel.ReleaseNo,
+                                    @fshptoaddr = rel.ShipToAddressKey,
+                                    @fsono = so.SalesOrderNo,
+                                    @fduedate = rel.DueDate,
+                                    @forderqty = rel.Quantity,
+                                    @fshpbefdue = rel.CanShipBeforeDue,
+                                    @fsplitshp = rel.AllowSplitShipments,
+                                    @funetprice = rel.UnitPrice,
+                                    @flistaxabl = rel.IsTaxable,
+                                    @fdelivery = rel.DeliveryNotes == null ? "" : rel.DeliveryNotes,
+                                    @fpriority = rel.Priority >= 1 && rel.Priority <= 9 ? rel.Priority : 4,
+                                    @fmasterrel = false
+
+                                }, transaction: trans);
+                            }
+                        }
+
                         try
                         {
                             trans.Commit();
@@ -250,14 +319,14 @@ namespace orchidM2MAPI.DataProviders
                         }
                     }
 
-                    
+
                     return so;
 
                 }
             }
             catch (Exception ex)
             {
-                
+
                 _logger.CreateLogger("error").Log(LogLevel.Error, ex.Message);
                 return null;
             }
