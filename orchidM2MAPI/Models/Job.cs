@@ -22,6 +22,8 @@ namespace orchidM2MAPI.Models
         public string JobMemo { get; set; }
         public string JobStatus { get; set; }
         public string LaserEtch { get; set; }
+        public string CustomerNo { get; set; }
+        public string SalesOrderNo { get; set; }
 
         public List<JobLot> Lots { get; set; }
         public List<JobRouteStep> Routing { get; set; }
