@@ -96,20 +96,29 @@ namespace orchidM2MAPI.DataProviders
             try
             {
                 string sQuery = "";
+                string newJobNo = "";
+                short newSuffix = 0;
 
                 // Retrieve shipping info
                 switch (location)
                 {
                     case "072":
-                        //Syteline Query
-                        sQuery = "SELECT        TOP (100) PERCENT dbo.job.job, dbo.job.suffix, dbo.jobroute.oper_num, dbo.job.item, dbo.jobroute.wc, dbo.wc.description FROM            dbo.jobroute INNER JOIN                          dbo.job ON dbo.jobroute.job = dbo.job.job AND dbo.jobroute.suffix = dbo.job.suffix INNER JOIN                          dbo.wc ON dbo.jobroute.wc = dbo.wc.wc WHERE        (dbo.job.job = @jobNo) AND (dbo.job.suffix = 0001) ORDER BY dbo.job.suffix, dbo.job.job_date DESC, dbo.jobroute.oper_num";
+                        //Syteline Query, may send a suffix after the hypen, if so split and change the where
+                        newJobNo = JobNo.Split("-")[0];
+                        newSuffix = JobNo.Split("-").Count() > 1 ? short.Parse(JobNo.Split("-")[1]) : short.Parse("0");
+                        
+                        sQuery = "SELECT        0 AS JobId, dbo.job.job + '-' + CAST(dbo.job.suffix AS NVARCHAR(5)) AS JobNo, dbo.lot.item AS PartNo, dbo.item.revision AS PartRev, '' AS JobType, dbo.job.ord_num AS SalesOrderNo, dbo.job.cust_num AS CustomerNo,                          dbo.job.stat AS JobStatus, dbo.coitem.due_date AS JobDueDate, dbo.job.qty_released AS JobQuantity, 0 AS JobLotId, dbo.lot.lot AS LotNo, dbo.preassigned_lot.qty_received AS LotQuantity, 'EA' AS LotQtyUnitOfMeasure FROM            dbo.lot INNER JOIN                          dbo.item ON dbo.lot.item = dbo.item.item INNER JOIN                          dbo.preassigned_lot ON dbo.lot.lot = dbo.preassigned_lot.lot INNER JOIN                          dbo.job ON dbo.preassigned_lot.ref_num = dbo.job.job AND dbo.preassigned_lot.ref_line_suf = dbo.job.suffix LEFT OUTER JOIN                          dbo.coitem ON dbo.job.ord_line = dbo.coitem.co_line AND dbo.job.ord_num = dbo.coitem.co_num WHERE        (dbo.preassigned_lot.ref_type = N'J') AND (dbo.job.job = @jobNo) AND (dbo.job.suffix = @suffixNo)";
                         break;
                     case "032":
+                        newJobNo = JobNo;
+
                         //Detroit - They use the suffix 0000, 0001, etc of job numbers, but it appears only the 0000 has the lot number
                         //           therefore I've changed the from clause to get lot numbers to only look at the first 5 digits of the job no
                         sQuery = "SELECT        dbo.jomast.identity_column AS JobId, dbo.jomast.fjobno AS JobNo, RTRIM(dbo.jomast.fpartno) AS PartNo, RTRIM(dbo.jomast.fpartrev) AS PartRev, dbo.jomast.ftype AS JobType, dbo.jomast.fsono AS SalesOrderNo,                          dbo.somast.fcustno AS CustomerNo, RTRIM(dbo.jomast.fstatus) AS JobStatus, dbo.jomast.fddue_date AS JobDueDate, dbo.jomast.fquantity AS JobQuantity, JobLots.identity_column AS JobLotId, RTRIM(JobLots.fclot) AS LotNo,                          JobLots.fnquantity AS LotQuantity, RTRIM(JobLots.fcmeasure) AS LotQtyUnitOfMeasure FROM            dbo.jomast LEFT OUTER JOIN                          dbo.somast ON dbo.jomast.fsono = dbo.somast.fsono LEFT OUTER JOIN                              (SELECT        fcdoc, fcpartno, fcpartrev, fclot, fnquantity, fddate, fcmeasure, identity_column, fac                                FROM            dbo.qalotc                                WHERE        (fctype = 'J') AND (fcuseindoc = '')) AS JobLots ON LEFT(dbo.jomast.fjobno, 5) = LEFT(JobLots.fcdoc, 5) WHERE        (dbo.jomast.fjobno = @jobNo)";
                         break;
                     default:
+                        newJobNo = JobNo;
+
                         sQuery = "SELECT        dbo.jomast.identity_column AS JobId, dbo.jomast.fjobno AS JobNo, RTRIM(dbo.jomast.fpartno) AS PartNo, RTRIM(dbo.jomast.fpartrev) AS PartRev, dbo.jomast.ftype AS JobType, dbo.jomast.fsono AS SalesOrderNo,                          dbo.somast.fcustno AS CustomerNo, RTRIM(dbo.jomast.fstatus) AS JobStatus, dbo.jomast.fddue_date AS JobDueDate, dbo.jomast.fquantity AS JobQuantity, JobLots.identity_column AS JobLotId, RTRIM(JobLots.fclot) AS LotNo,                          JobLots.fnquantity AS LotQuantity, RTRIM(JobLots.fcmeasure) AS LotQtyUnitOfMeasure FROM            dbo.jomast LEFT OUTER JOIN                          dbo.somast ON dbo.jomast.fsono = dbo.somast.fsono LEFT OUTER JOIN                              (SELECT        fcdoc, fcpartno, fcpartrev, fclot, fnquantity, fddate, fcmeasure, identity_column, fac                                FROM            dbo.qalotc                                WHERE        (fctype = 'J') AND (fcuseindoc = '')) AS JobLots ON dbo.jomast.fjobno = JobLots.fcdoc WHERE        (dbo.jomast.fjobno = @jobNo)";
                         break;
                 }
@@ -137,7 +146,7 @@ namespace orchidM2MAPI.DataProviders
 
                             return jobEntry;
                         },
-                        param: new { jobNo = JobNo },
+                        param: new { jobNo = newJobNo, suffixNo = newSuffix },
                         splitOn: "JobLotId")
                     .Distinct()
                     .ToList();
