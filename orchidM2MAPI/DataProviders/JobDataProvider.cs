@@ -102,6 +102,7 @@ namespace orchidM2MAPI.DataProviders
                 // Retrieve shipping info
                 switch (location)
                 {
+                    case "076":
                     case "072":
                         //Syteline Query, may send a suffix after the hypen, if so split and change the where
                         newJobNo = JobNo.Split("-")[0];
@@ -114,7 +115,7 @@ namespace orchidM2MAPI.DataProviders
 
                         //Detroit - They use the suffix 0000, 0001, etc of job numbers, but it appears only the 0000 has the lot number
                         //           therefore I've changed the from clause to get lot numbers to only look at the first 5 digits of the job no
-                        sQuery = "SELECT        dbo.jomast.identity_column AS JobId, dbo.jomast.fjobno AS JobNo, RTRIM(dbo.jomast.fpartno) AS PartNo, RTRIM(dbo.jomast.fpartrev) AS PartRev, dbo.jomast.ftype AS JobType, dbo.jomast.fsono AS SalesOrderNo,                          dbo.somast.fcustno AS CustomerNo, RTRIM(dbo.jomast.fstatus) AS JobStatus, dbo.jomast.fddue_date AS JobDueDate, dbo.jomast.fquantity AS JobQuantity, JobLots.identity_column AS JobLotId, RTRIM(JobLots.fclot) AS LotNo,                          JobLots.fnquantity AS LotQuantity, RTRIM(JobLots.fcmeasure) AS LotQtyUnitOfMeasure FROM            dbo.jomast LEFT OUTER JOIN                          dbo.somast ON dbo.jomast.fsono = dbo.somast.fsono LEFT OUTER JOIN                              (SELECT        fcdoc, fcpartno, fcpartrev, fclot, fnquantity, fddate, fcmeasure, identity_column, fac                                FROM            dbo.qalotc                                WHERE        (fctype = 'J') AND (fcuseindoc = '')) AS JobLots ON LEFT(dbo.jomast.fjobno, 5) = LEFT(JobLots.fcdoc, 5) WHERE        (dbo.jomast.fjobno = @jobNo)";
+                        sQuery = "SELECT        dbo.jomast.identity_column AS JobId, dbo.jomast.fjobno AS JobNo, RTRIM(dbo.jomast.fpartno) AS PartNo, RTRIM(dbo.jomast.fpartrev) AS PartRev, dbo.jomast.ftype AS JobType, dbo.jomast.fsono AS SalesOrderNo,                          dbo.somast.fcustno AS CustomerNo, RTRIM(dbo.jomast.fstatus) AS JobStatus, dbo.jomast.fddue_date AS JobDueDate, dbo.jomast.fquantity AS JobQuantity, JobLots.identity_column AS JobLotId, RTRIM(JobLots.fclot) AS LotNo,                          JobLots.fnquantity AS LotQuantity, RTRIM(JobLots.fcmeasure) AS LotQtyUnitOfMeasure FROM            dbo.jomast LEFT OUTER JOIN                          dbo.somast ON dbo.jomast.fsono = dbo.somast.fsono LEFT OUTER JOIN                              (SELECT        fcdoc, fcpartno, fcpartrev, fclot, fnquantity, fddate, fcmeasure, identity_column, fac, fcuseindoc                                FROM            dbo.qalotc                                WHERE        (fctype = 'J')) AS JobLots ON LEFT(dbo.jomast.fjobno, 5) = LEFT(JobLots.fcdoc, 5) AND (LEFT(dbo.jomast.fjobno, 5) = LEFT(JobLots.fcuseindoc, 5) OR                          JobLots.fcuseindoc = '') WHERE        (dbo.jomast.fjobno = @jobNo)";
                         break;
                     default:
                         newJobNo = JobNo;
