@@ -63,10 +63,10 @@ namespace orchidM2MAPI.DataProviders
                             if (!soDictionary.TryGetValue(so.SalesOrderId, out soEntry))
                             {
                                 soEntry = so;
-                                soEntry.Items = new List<SalesOrderItem>();
+                                soEntry.SalesOrderLineItems = new List<SalesOrderItem>();
                                 soDictionary.Add(soEntry.SalesOrderId, soEntry);
                             }
-                            soEntry.Items.Add(soitem);
+                            soEntry.SalesOrderLineItems.Add(soitem);
 
 
                             return soEntry;
@@ -276,16 +276,16 @@ namespace orchidM2MAPI.DataProviders
                     fmstreet = so.SoldToStreet,
                     fmusrmemo1 = so.UserDefinedMemo1,
                     fpriority = so.Priority,
-                    festimator = "JRP",
-                    fnextenum = "001",
-                    fnextinum = "1",
+                    festimator = so.SalesOrderCoordinator,
+                    fnextenum = so.NextExternalLineNo,
+                    fnextinum = so.NextInternalLineNo,
                     fsorev = "00"
                     //CreatedDate = so.CreatedDate,
                     //ModifiedDate = so.ModifiedDate,
                     //fbilladdr = so.BillToAddressKey
                 }, transaction: trans);
 
-                foreach (SalesOrderItem line in so.Items)
+                foreach (SalesOrderItem line in so.SalesOrderLineItems)
                 {
                     //Create the new Sales Order Line Item
                     conn.Execute(sQuerySOItemInsert, new
@@ -326,7 +326,7 @@ namespace orchidM2MAPI.DataProviders
 
                     }, transaction: trans);
 
-                    foreach (SalesOrderReleases rel in line.Releases)
+                    foreach (SalesOrderReleases rel in line.SalesOrderReleases)
                     {
                         //Create the new Sales Order Line Item
                         conn.Execute(sQuerySORelInsert, new
@@ -403,15 +403,15 @@ namespace orchidM2MAPI.DataProviders
                             if (!soDictionary.TryGetValue(somain.SalesOrderId, out soEntry))
                             {
                                 soEntry = somain;
-                                soEntry.Items = new List<SalesOrderItem>();
+                                soEntry.SalesOrderLineItems = new List<SalesOrderItem>();
                                 soDictionary.Add(soEntry.SalesOrderId, soEntry);
-                                soEntry.Items.Add(soitem);
+                                soEntry.SalesOrderLineItems.Add(soitem);
                             }
                             else
                             {
-                                if (!soEntry.Items.Exists(x => x.SalesOrderItemId == soitem.SalesOrderItemId))
+                                if (!soEntry.SalesOrderLineItems.Exists(x => x.SalesOrderItemId == soitem.SalesOrderItemId))
                                 {
-                                    soEntry.Items.Add(soitem);
+                                    soEntry.SalesOrderLineItems.Add(soitem);
                                 }
                             }
 
@@ -419,15 +419,15 @@ namespace orchidM2MAPI.DataProviders
                             if (!soItemDictionary.TryGetValue(soitem.SalesOrderItemId, out soItemEntry))
                             {
                                 soItemEntry = soitem;
-                                soItemEntry.Releases = new List<SalesOrderReleases>();
+                                soItemEntry.SalesOrderReleases = new List<SalesOrderReleases>();
                                 soItemDictionary.Add(soitem.SalesOrderItemId, soItemEntry);
-                                soItemEntry.Releases.Add(sorelease);
+                                soItemEntry.SalesOrderReleases.Add(sorelease);
                             }
                             else
                             {
-                                if (!soItemEntry.Releases.Exists(x => x.SalesOrderReleaseId == sorelease.SalesOrderReleaseId))
+                                if (!soItemEntry.SalesOrderReleases.Exists(x => x.SalesOrderReleaseId == sorelease.SalesOrderReleaseId))
                                 {
-                                    soItemEntry.Releases.Add(sorelease);
+                                    soItemEntry.SalesOrderReleases.Add(sorelease);
                                 }
                             }
 
@@ -467,21 +467,24 @@ namespace orchidM2MAPI.DataProviders
             }
 
 
-            foreach (SalesOrderItem line in so.Items)
+            foreach (SalesOrderItem line in so.SalesOrderLineItems)
             {
 
                 //Use the M2M Stored Procedure to determine line item costs
                 using (var lineCosts = conn.QueryMultiple("SalesGetRecalcOrderItemCosts", new { @OrderNumber = so.SalesOrderNo, @OrderItemNumber = line.InternalItemNo, @UTCompFCostEst = "", @UTCompFCostRef = "", @UTCompFCostMType = "", @OrderType = "S", @UseStandardTransitCost = 1, @GetExtendedCosts = 0 }, commandType: CommandType.StoredProcedure, transaction: trans))
                 {
-                    var junk = lineCosts.Read().First();
-                    var costs = lineCosts.Read<M2MLineCosts>().FirstOrDefault();
+                    var returnValue = lineCosts.Read<M2MResult>().First();
+                    if (returnValue.ReturnValue == 0)
+                    {
+                        var costs = lineCosts.Read<M2MLineCosts>().FirstOrDefault();
 
-                    //Update line item costs
-                    conn.Execute(sUpdateLineCosts, new { flabact = costs.LaborActual, fmatlact = costs.MaterialActual, fovhdact = costs.OverheadActual, ftoolact = costs.ToolActual, fsono = so.SalesOrderNo, finumber = line.InternalItemNo }, transaction: trans);
+                        //Update line item costs
+                        conn.Execute(sUpdateLineCosts, new { flabact = costs.LaborActual, fmatlact = costs.MaterialActual, fovhdact = costs.OverheadActual, ftoolact = costs.ToolActual, fsono = so.SalesOrderNo, finumber = line.InternalItemNo }, transaction: trans);
 
+                    }
                 }
 
-                foreach (SalesOrderReleases rel in line.Releases)
+                foreach (SalesOrderReleases rel in line.SalesOrderReleases)
                 {
                     //Use the M2M Stored Procedure to determine release costs
                     using (var relCosts = conn.QueryMultiple("SalesGetRecalcOrderReleaseCosts", new { @SalesOrderNumber = so.SalesOrderNo, @SalesOrderItemNumber = line.InternalItemNo, @SalesOrderReleaseNumber = rel.ReleaseNo}, commandType: CommandType.StoredProcedure, transaction: trans))
@@ -596,7 +599,7 @@ namespace orchidM2MAPI.DataProviders
             }
 
             //Check Sales Order Items
-            foreach (SalesOrderItem soitem in so.Items)
+            foreach (SalesOrderItem soitem in so.SalesOrderLineItems)
             {
                 if (soitem.DueDateToShip != null)
                 {
@@ -610,7 +613,7 @@ namespace orchidM2MAPI.DataProviders
 
 
                 //Check Sales Order Item Releases
-                foreach (SalesOrderReleases sorel in soitem.Releases)
+                foreach (SalesOrderReleases sorel in soitem.SalesOrderReleases)
                 {
                     if (sorel.DueDateR != null)
                     {

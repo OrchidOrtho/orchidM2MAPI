@@ -25,4 +25,9 @@ namespace orchidM2MAPI.Models
         public float LaborCost { get; set; }
         public float OverheadCost { get; set; }
     }
+
+    public class M2MResult
+    {
+        public int ReturnValue { get; set; }
+    }
 }

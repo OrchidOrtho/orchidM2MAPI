@@ -70,10 +70,11 @@ namespace orchidM2MAPI.Models
         public DateTime CreatedDate { get; set; }
         public DateTime ModifiedDate { get; set; }
 
-        public List<SalesOrderItem> Items { get; set; }
+        public List<SalesOrderItem> SalesOrderLineItems { get; set; }
 
 
-        private int NextLineNo {
+        private int NextLineNo
+        {
             get
             {
                 return _NextLineNo;
@@ -86,11 +87,28 @@ namespace orchidM2MAPI.Models
             }
         }
 
+        public string NextExternalLineNo
+        {
+            get
+            {
+                return _NextExternalLineNo;
+            }
+        }
+
+        public string NextInternalLineNo
+        {
+            get
+            {
+                return _NextInternalLineNo;
+            }
+        }
+
         public bool IsNew
         {
             get
             {
-                if (SalesOrderId == 0) {
+                if (SalesOrderId == 0)
+                {
                     return true;
                 }
                 else

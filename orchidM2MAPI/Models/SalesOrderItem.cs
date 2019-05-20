@@ -72,7 +72,7 @@ namespace orchidM2MAPI.Models
         public float AlternateQuantity { get; set; }
         public string AlternateUnitOfMeasure { get; set; }
 
-        public List<SalesOrderReleases> Releases { get; set; }
+        public List<SalesOrderReleases> SalesOrderReleases { get; set; }
 
 
         private string padNumber3(string numberToPad, bool useZeros)
