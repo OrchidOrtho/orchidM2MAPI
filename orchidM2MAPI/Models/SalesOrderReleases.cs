@@ -12,18 +12,18 @@ namespace orchidM2MAPI.Models
         public Int32 SalesOrderReleaseId { get; set; }
 
         public string ReleaseNo { get; set; }
-        public string ShipToAddressKey { get; set; }
-        public DateTime DueDate { get; set; }
+        public string ShipToAddressKeyR { get; set; }
+        public DateTime DueDateR { get; set; }
         public bool IsMasterRelease { get; set; }
         public float NetPrice { get; set; }
-        public float Quantity { get; set; }
+        public float QuantityR { get; set; }
         public bool CanShipBeforeDue { get; set; }
         public bool AllowSplitShipments { get; set; }
         public float UnitPrice { get; set; }
         public bool IsTaxable { get; set; }
         public string DeliveryNotes { get; set; }
         public string UserDefinedRev { get; set; }
-        public int Priority { get; set; }
+        public int PriorityR { get; set; }
 
     }
 }

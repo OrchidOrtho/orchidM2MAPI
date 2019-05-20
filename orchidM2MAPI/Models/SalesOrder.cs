@@ -34,6 +34,7 @@ namespace orchidM2MAPI.Models
         public string CustomerName { get; set; }
         public string CustomerPONo { get; set; }
         public DateTime? AcknowledgedDate { get; set; }
+        public DateTime? CancelledDate { get; set; }
         public DateTime OrderDate { get; set; }
         public string Status { get; set; }
 
@@ -42,7 +43,6 @@ namespace orchidM2MAPI.Models
         public string SoldToState { get; set; }
         public string SoldToZip { get; set; }
         public string SoldToStreet { get; set; }
-        public DateTime? CancelledDate { get; set; }
         public string ContactName { get; set; }
         public string UserDefinedString1 { get; set; }
         public string UserDefinedstring2 { get; set; }
