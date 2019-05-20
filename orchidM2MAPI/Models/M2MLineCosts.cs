@@ -16,4 +16,13 @@ namespace orchidM2MAPI.Models
         public float SetupActual { get; set; }
         public float FixedActual { get; set; }
     }
+
+    public class M2MRelCosts
+    {
+
+        public float MaterialCost { get; set; }
+        public float ToolCost { get; set; }
+        public float LaborCost { get; set; }
+        public float OverheadCost { get; set; }
+    }
 }

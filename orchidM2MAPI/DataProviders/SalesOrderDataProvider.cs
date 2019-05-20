@@ -371,6 +371,7 @@ namespace orchidM2MAPI.DataProviders
         private SalesOrder SelectSO(string location, SalesOrder so)
         {
             string sQuery = "";
+            SalesOrder returnSO = null;
 
             // Retrieve shipping info
             switch (location)
@@ -430,15 +431,15 @@ namespace orchidM2MAPI.DataProviders
                                 }
                             }
 
-
-                            return soEntry;
+                            returnSO = soEntry;
+                            return returnSO;
                         },
                         param: new { salesOrderNo = so.SalesOrderNo },
                         splitOn: "SalesOrderItemId, SalesOrderReleaseId")
                     .Distinct()
                     .ToList();
 
-                return null;
+                return returnSO;
             }
 
         }
@@ -446,6 +447,7 @@ namespace orchidM2MAPI.DataProviders
         private void setCosts(string location, SalesOrder so, IDbConnection conn, IDbTransaction trans)
         {
             string sUpdateLineCosts = "";
+            string sUpdateReleaseCosts = "";
 
             // Generate queries based on location
             switch (location)
@@ -460,6 +462,7 @@ namespace orchidM2MAPI.DataProviders
                     break;
                 default:
                     sUpdateLineCosts = "UPDATE soitem SET flabact = @flabact, fmatlact = @fmatlact, fovhdact = @fovhdact, ftoolact = @ftoolact WHERE fsono = @fsono AND finumber = @finumber";
+                    sUpdateReleaseCosts = "UPDATE sorels SET flabcost = @flabcost, fmatlcost = @fmatlcost, fovhdcost = @fovhdcost, ftoolcost = @ftoolcost WHERE fsono = @fsono AND finumber = @finumber AND frelease = @frelease";
                     break;
             }
 
@@ -474,9 +477,21 @@ namespace orchidM2MAPI.DataProviders
                     var costs = lineCosts.Read<M2MLineCosts>().FirstOrDefault();
 
                     //Update line item costs
-                    //Update the Next Sales Order Number
                     conn.Execute(sUpdateLineCosts, new { flabact = costs.LaborActual, fmatlact = costs.MaterialActual, fovhdact = costs.OverheadActual, ftoolact = costs.ToolActual, fsono = so.SalesOrderNo, finumber = line.InternalItemNo }, transaction: trans);
 
+                }
+
+                foreach (SalesOrderReleases rel in line.Releases)
+                {
+                    //Use the M2M Stored Procedure to determine release costs
+                    using (var relCosts = conn.QueryMultiple("SalesGetRecalcOrderReleaseCosts", new { @SalesOrderNumber = so.SalesOrderNo, @SalesOrderItemNumber = line.InternalItemNo, @SalesOrderReleaseNumber = rel.ReleaseNo}, commandType: CommandType.StoredProcedure, transaction: trans))
+                    {
+                        var costs = relCosts.Read<M2MRelCosts>().FirstOrDefault();
+
+                        //Update release costs
+                        conn.Execute(sUpdateReleaseCosts, new { flabcost = costs.LaborCost, fmatlcost = costs.MaterialCost, fovhdcost = costs.OverheadCost, ftoolcost = costs.ToolCost, fsono = so.SalesOrderNo, finumber = line.InternalItemNo, frelease = rel.ReleaseNo }, transaction: trans);
+
+                    }
                 }
             }
 
