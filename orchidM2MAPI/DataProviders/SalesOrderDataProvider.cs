@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using orchidM2MAPI.Models;
 using Dapper;
 using Microsoft.Extensions.Logging;
+using orchidM2MAPI.Utilities;
 
 namespace orchidM2MAPI.DataProviders
 {
@@ -240,37 +241,37 @@ namespace orchidM2MAPI.DataProviders
                 //Create the new Sales Order
                 conn.Execute(sQuerySOInsert, new
                 {
-                    fsono = so.SalesOrderNo,
-                    fcustno = so.CustomerNo,
-                    fcompany = so.CustomerName,
-                    fcity = so.SoldToCity,
-                    fcustpono = so.CustomerPONo,
+                    fsono = so.SalesOrderNo.Truncate(6),
+                    fcustno = so.CustomerNo.Truncate(6),
+                    fcompany = so.CustomerName.Truncate(35),
+                    fcity = so.SoldToCity.Truncate(20),
+                    fcustpono = so.CustomerPONo.Truncate(20),
                     fackdate = so.AcknowledgedDate == null ? DateTime.Parse("1900-01-01 00:00:00.000") : so.AcknowledgedDate,
                     fcanc_dt = so.CancelledDate == null ? DateTime.Parse("1900-01-01 00:00:00.000") : so.CancelledDate,
-                    fcontact = so.ContactName,
-                    fcountry = so.SoldToCountry,
-                    fcusrchr1 = so.UserDefinedString1,
-                    fcusrchr2 = so.UserDefinedstring2,
-                    fcusrchr3 = so.UserDefinedString3,
+                    fcontact = so.ContactName.Truncate(30),
+                    fcountry = so.SoldToCountry.Truncate(25),
+                    fcusrchr1 = so.UserDefinedString1.Truncate(20),
+                    fcusrchr2 = so.UserDefinedstring2.Truncate(40),
+                    fcusrchr3 = so.UserDefinedString3.Truncate(40),
                     fduedate = so.DueDate == null ? DateTime.Parse("1900-01-01 00:00:00.000") : so.DueDate,
                     fdusrdate1 = so.UserDefinedDate1 == null ? DateTime.Parse("1900-01-01 00:00:00.000") : so.UserDefinedDate1,
-                    ffax = so.FaxNumber,
+                    ffax = so.FaxNumber.Truncate(20),
                     ffob = so.FreightOnBoardPoint,
                     fnusrqty1 = so.UserDefinedQuantity1,
                     fnusrcur1 = so.UserDefinedCurrency1,
                     forderdate = so.OrderDate == null ? DateTime.Parse("1900-01-01 00:00:00.000") : so.OrderDate,
                     fpaytype = so.PaymentType,
-                    fphone = so.PhoneNumber,
+                    fphone = so.PhoneNumber.Truncate(20),
                     fshipvia = so.ShipVia,
                     fshptoaddr = so.ShipToAddressKey,
                     fsocoord = so.SalesOrderCoordinator,
                     fsoldaddr = so.SoldToAddressKey,
                     fsoldby = so.SoldBy,
-                    fstate = so.SoldToState,
+                    fstate = so.SoldToState.Truncate(20),
                     fstatus = so.Status,
                     fterm = so.Terms,
                     fterr = so.InternalSalesTerritory,
-                    fzip = so.SoldToZip,
+                    fzip = so.SoldToZip.Truncate(10),
                     //fncancchrge = so.CustomerSONumber,
                     fackmemo = so.SOAcknowledgeMemo,
                     fmstreet = so.SoldToStreet,

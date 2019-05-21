@@ -73,7 +73,7 @@ namespace orchidM2MAPI.Models
         public List<SalesOrderItem> SalesOrderLineItems { get; set; }
 
 
-        private int NextLineNo
+        public int NextLineNo
         {
             get
             {
