@@ -24,6 +24,7 @@ namespace orchidM2MAPI.Models
         public string DeliveryNotes { get; set; }
         public string UserDefinedRev { get; set; }
         public int PriorityR { get; set; }
+        public bool IsNewLine { get; set; } // This flag is sent from Mendix if it's a new line that should be inserted rather than updated.
 
     }
 }

@@ -366,7 +366,194 @@ namespace orchidM2MAPI.DataProviders
 
         private void updateSO(string location, SalesOrder so, IDbConnection conn, IDbTransaction trans)
         {
+            try
+            {
+                string sQuerySOUpdate = "";
+                string sQuerySOItemUpdate = "";
+                string sQuerySORelUpdate = "";
+                string sNextSONoQuery = "";
+                string sNextSONoUpdateQuery = "";
 
+                // Generate queries based on location
+                switch (location)
+                {
+                    case "072":
+                        //Syteline Query
+                        sQuerySOUpdate = "";
+                        break;
+                    case "080":
+                        //Need different query for 7.5
+
+                        break;
+                    default:
+
+                        sQuerySOUpdate = "UPDATE somast fcustpono = @fcustpono, fackdate = @fackdate, fcanc_dt = @fcanc_dt, fduedate = @fduedate, ffob = @ffob, fshipvia = @fshipvia, fshptoaddr = @fshptoaddr, fstatus = @fstatus, fterm = @fterm, fpriority = @fpriority, fnextenum = @fnextenum, fnextinum = @fnextinum, fsorev = @fsorev WHERE fsono = @fsono";
+
+                        sQuerySOItemUpdate = "UPDATE soitem (fpartno = @fpartno, fpartrev = @fpartrev, fcustpart = @fcustpart, fcustptrev = @fcustptrev, fduedate = @fduedate, fgroup = @fgroup, fmeasure = @fmeasure, fmultiple = @fmultiple, fnextinum = @fnextinum, fnextrel = @fnextrel, fordertype = @fordertype, fprodcl = @fprodcl, fquantity = @fquantity, fdesc = @fdesc, fdescmemo = @fdescmemo, FcAltUM = @FcAltUM, FnAltQty = @FnAltQty, fcudrev = @fcudrev WHERE fsono = @fsono AND finumber = @finumber ";
+
+                        sQuerySORelUpdate = "UPDATE sorels fpartno = @fpartno, fpartrev = @fpartrev, fshptoaddr = @fshptoaddr, fduedate = @fduedate, forderqty = @forderqty, fshpbefdue = @fshpbefdue, fsplitshp = @fsplitshp, funetprice = @funetprice, flistaxabl = @flistaxabl, fdelivery = @fdelivery, fpriority = @fpriority, fmasterrel = @fmasterrel, fbook = @fbook, fnetprice = @fnetprice, fcudrev = @fcudrev WHERE finumber = @finumber AND fsono = @fsono AND frelease = @frelease ";
+                        break;
+                }
+
+
+
+                //Update the new Sales Order
+                conn.Execute(sQuerySOUpdate, new
+                {
+                    fcustpono = so.CustomerPONo.Truncate(20),
+                    fackdate = so.AcknowledgedDate == null ? DateTime.Parse("1900-01-01 00:00:00.000") : so.AcknowledgedDate,
+                    fcanc_dt = so.CancelledDate == null ? DateTime.Parse("1900-01-01 00:00:00.000") : so.CancelledDate,
+                    fduedate = so.DueDate == null ? DateTime.Parse("1900-01-01 00:00:00.000") : so.DueDate,
+                    ffob = so.FreightOnBoardPoint,
+                    fshipvia = so.ShipVia,
+                    fshptoaddr = so.ShipToAddressKey,
+                    fstatus = so.Status,
+                    fterm = so.Terms,
+                    //fncancchrge = so.CustomerSONumber,
+                    fpriority = so.Priority,
+                    fnextenum = so.NextExternalLineNo,
+                    fnextinum = so.NextInternalLineNo,
+                    fsorev = "00"
+                    //CreatedDate = so.CreatedDate,
+                    //ModifiedDate = so.ModifiedDate,
+                    //fbilladdr = so.BillToAddressKey
+                }, transaction: trans);
+
+                foreach (SalesOrderItem line in so.SalesOrderLineItems)
+                {
+                    if (line.IsNewLine)
+                    {
+                        //Create the new Sales Order Line Item
+                        conn.Execute(this.GetQuery(location, SQLQueryStatement.SOLineInsert), new
+                        {
+                            @finumber = line.InternalItemNo,
+                            @fpartno = line.PartNo,
+                            @fpartrev = line.PartRev,
+                            @fsono = so.SalesOrderNo,
+                            @fllotreqd = line.LotRequired,
+                            @fautocreat = false,
+                            @fcas_bom = false,
+                            @fcas_rtg = false,
+                            @fcustpart = line.CustomerPartNo,
+                            @fcustptrev = line.CustomerPartRev == null ? "" : line.CustomerPartRev,
+                            @fduedate = line.DueDateToShip == null ? DateTime.Parse("1900-01-01 00:00:00.000") : line.DueDateToShip,
+                            @fenumber = line.ExternalItemNo,
+                            @fgroup = line.PartGroup,
+                            @fmeasure = line.UnitOfMeasure,
+                            @fmultiple = line.IsBlanketRelease,
+                            @fnextinum = 1,
+                            @fnextrel = 1,
+                            @fnunder = line.QuantityUnder,
+                            @fnover = line.QuantityOver,
+                            @fordertype = "Fix",
+                            @fprintmemo = line.PrintMemo,
+                            @fprodcl = line.PartClass,
+                            @fquantity = line.Quantity,
+                            @fsource = line.PartSource,
+                            @fdesc = line.DescriptionShort,
+                            @fdescmemo = line.DescriptionMemo == null ? "" : line.DescriptionMemo,
+                            @fac = line.Facility == null || line.Facility == "" ? "Default" : line.Facility,
+                            @fclotext = "S",
+                            @fstandpart = true,
+                            @sfac = line.Facility == null || line.Facility == "" ? "Default" : line.Facility,
+                            @FcAltUM = line.UnitOfMeasure,
+                            @FnAltQty = line.Quantity,
+                            @fcudrev = line.PartRev
+
+                        }, transaction: trans);
+
+                    }
+                    else
+                    {
+                        //Update the new Sales Order Line Item
+                        conn.Execute(sQuerySOItemUpdate, new
+                        {
+                            @fpartno = line.PartNo,
+                            @fpartrev = line.PartRev,
+                            @fcustpart = line.CustomerPartNo,
+                            @fcustptrev = line.CustomerPartRev == null ? "" : line.CustomerPartRev,
+                            @fduedate = line.DueDateToShip == null ? DateTime.Parse("1900-01-01 00:00:00.000") : line.DueDateToShip,
+                            @fgroup = line.PartGroup,
+                            @fmeasure = line.UnitOfMeasure,
+                            @fmultiple = line.IsBlanketRelease,
+                            @fnextinum = 1,
+                            @fnextrel = 1,
+                            @fordertype = "Fix",
+                            @fprodcl = line.PartClass,
+                            @fquantity = line.Quantity,
+                            @fdesc = line.DescriptionShort,
+                            @fdescmemo = line.DescriptionMemo == null ? "" : line.DescriptionMemo,
+                            @FcAltUM = line.UnitOfMeasure,
+                            @FnAltQty = line.Quantity,
+                            @fcudrev = line.PartRev
+
+                        }, transaction: trans);
+                    }
+
+
+                    foreach (SalesOrderReleases rel in line.SalesOrderReleases)
+                    {
+                        if (rel.IsNewLine)
+                        {
+                            //Create the new Sales Order Line Item
+                            conn.Execute(this.GetQuery(location, SQLQueryStatement.SORelInsert), new
+                            {
+                                @fenumber = line.ExternalItemNo,
+                                @finumber = line.InternalItemNo,
+                                @fpartno = line.PartNo,
+                                @fpartrev = line.PartRev,
+                                @frelease = rel.IsMasterRelease ? "000" : rel.ReleaseNo,
+                                @fshptoaddr = rel.ShipToAddressKeyR,
+                                @fsono = so.SalesOrderNo,
+                                @fduedate = rel.DueDateR == null ? DateTime.Parse("1900-01-01 00:00:00.000") : rel.DueDateR,
+                                @forderqty = rel.QuantityR,
+                                @fshpbefdue = rel.CanShipBeforeDue,
+                                @fsplitshp = rel.AllowSplitShipments,
+                                @funetprice = rel.UnitPrice,
+                                @flistaxabl = rel.IsTaxable,
+                                @fdelivery = rel.DeliveryNotes == null ? "" : rel.DeliveryNotes,
+                                @fpriority = rel.PriorityR >= 1 && rel.PriorityR <= 9 ? rel.PriorityR : 4,
+                                @fmasterrel = false,
+                                @fbook = rel.QuantityR,
+                                @fnetprice = rel.UnitPrice,
+                                @fcudrev = line.PartRev
+
+                            }, transaction: trans);
+
+                        }
+                        else
+                        {
+                            //Update the new Sales Order Line Item
+                            conn.Execute(sQuerySORelUpdate, new
+                            {
+                                @fpartno = line.PartNo,
+                                @fpartrev = line.PartRev,
+                                @fshptoaddr = rel.ShipToAddressKeyR,
+                                @fduedate = rel.DueDateR == null ? DateTime.Parse("1900-01-01 00:00:00.000") : rel.DueDateR,
+                                @forderqty = rel.QuantityR,
+                                @fshpbefdue = rel.CanShipBeforeDue,
+                                @fsplitshp = rel.AllowSplitShipments,
+                                @funetprice = rel.UnitPrice,
+                                @flistaxabl = rel.IsTaxable,
+                                @fdelivery = rel.DeliveryNotes == null ? "" : rel.DeliveryNotes,
+                                @fpriority = rel.PriorityR >= 1 && rel.PriorityR <= 9 ? rel.PriorityR : 4,
+                                @fmasterrel = false,
+                                @fbook = rel.QuantityR,
+                                @fnetprice = rel.UnitPrice,
+                                @fcudrev = line.PartRev
+
+                            }, transaction: trans);
+                        }
+
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.CreateLogger("error").Log(LogLevel.Error, ex.Message);
+
+            }
         }
 
         private SalesOrder SelectSO(string location, SalesOrder so)
@@ -488,7 +675,7 @@ namespace orchidM2MAPI.DataProviders
                 foreach (SalesOrderReleases rel in line.SalesOrderReleases)
                 {
                     //Use the M2M Stored Procedure to determine release costs
-                    using (var relCosts = conn.QueryMultiple("SalesGetRecalcOrderReleaseCosts", new { @SalesOrderNumber = so.SalesOrderNo, @SalesOrderItemNumber = line.InternalItemNo, @SalesOrderReleaseNumber = rel.ReleaseNo}, commandType: CommandType.StoredProcedure, transaction: trans))
+                    using (var relCosts = conn.QueryMultiple("SalesGetRecalcOrderReleaseCosts", new { @SalesOrderNumber = so.SalesOrderNo, @SalesOrderItemNumber = line.InternalItemNo, @SalesOrderReleaseNumber = rel.ReleaseNo }, commandType: CommandType.StoredProcedure, transaction: trans))
                     {
                         var costs = relCosts.Read<M2MRelCosts>().FirstOrDefault();
 
@@ -634,6 +821,94 @@ namespace orchidM2MAPI.DataProviders
         private bool IsValidDate(DateTime? input)
         {
             return (input >= DateTime.Parse("1900-01-01 00:00:00.000") && input <= DateTime.Parse("2100-12-31 00:00:00.000"));
+        }
+
+        private enum SQLQueryStatement
+        {
+            SOInsert,
+            SOUpdate,
+            SOLineInsert,
+            SOLineUpdate,
+            SORelInsert,
+            SORelUpdate
+        }
+
+        private string GetQuery(string siteCode, SQLQueryStatement queryType)
+        {
+            string retVal = "";
+
+            // Generate queries based on location
+            switch (siteCode)
+            {
+                case "072":
+                    //Syteline Query
+                    switch (queryType)
+                    {
+                        case SQLQueryStatement.SOInsert:
+                            break;
+                        case SQLQueryStatement.SOUpdate:
+                            break;
+                        case SQLQueryStatement.SOLineInsert:
+                            break;
+                        case SQLQueryStatement.SOLineUpdate:
+                            break;
+                        case SQLQueryStatement.SORelInsert:
+                            break;
+                        case SQLQueryStatement.SORelUpdate:
+                            break;
+                    }
+                    break;
+                case "080":
+                    //Need different query for 7.5
+                    switch (queryType)
+                    {
+                        case SQLQueryStatement.SOInsert:
+                            retVal = "INSERT INTO somast (fsono, fcustno, fcompany, fcity, fcustpono, fackdate, fcanc_dt, fcontact, fcountry, fcusrchr1, fcusrchr2, fcusrchr3, fduedate, fdusrdate1, ffax, ffob, fnusrqty1, fnusrcur1, forderdate, fpaytype, fphone, fshipvia, fshptoaddr, fsocoord, fsoldaddr, fsoldby, fstate, fstatus, fterm, fterr, fzip, fncancchrge, fackmemo, fmstreet, fmusrmemo1, fpriority, CreatedDate, ModifiedDate, fbilladdr) ";
+                            retVal = retVal + "VALUES (@fsono, @fcustno, @fcompany, @fcity, @fcustpono, @fackdate, @fcanc_dt, @fcontact, @fcountry, @fcusrchr1, @fcusrchr2, @fcusrchr3, @fduedate, @fdusrdate1, @ffax, @ffob, @fnusrqty1, @fnusrcur1, @forderdate, @fpaytype, @fphone, @fshipvia, @fshptoaddr, @fsocoord, @fsoldaddr, @fsoldby, @fstate, @fstatus, @fterm, @fterr, @fzip, @fncancchrge, @fackmemo, @fmstreet, @fmusrmemo1, @fpriority, @CreatedDate, @ModifiedDate, @fbilladdr)";
+
+                            break;
+                        case SQLQueryStatement.SOUpdate:
+                            break;
+                        case SQLQueryStatement.SOLineInsert:
+                            break;
+                        case SQLQueryStatement.SOLineUpdate:
+                            break;
+                        case SQLQueryStatement.SORelInsert:
+                            break;
+                        case SQLQueryStatement.SORelUpdate:
+                            break;
+                    }
+
+                    break;
+                default:
+                    switch (queryType)
+                    {
+                        case SQLQueryStatement.SOInsert:
+                            retVal = "INSERT INTO somast (fsono, fcustno, fcompany, fcity, fcustpono, fackdate, fcanc_dt, fcontact, fcountry, fcusrchr1, fcusrchr2, fcusrchr3, fduedate, fdusrdate1, ffax, ffob, fnusrqty1, fnusrcur1, forderdate, fpaytype, fphone, fshipvia, fshptoaddr, fsocoord, fsoldaddr, fsoldby, fstate, fstatus, fterm, fterr, fzip, fackmemo, fmstreet, fmusrmemo1, fpriority, festimator, fnextenum, fnextinum, fsorev) ";
+                            retVal = retVal + "VALUES (@fsono, @fcustno, @fcompany, @fcity, @fcustpono, @fackdate, @fcanc_dt, @fcontact, @fcountry, @fcusrchr1, @fcusrchr2, @fcusrchr3, @fduedate, @fdusrdate1, @ffax, @ffob, @fnusrqty1, @fnusrcur1, @forderdate, @fpaytype, @fphone, @fshipvia, @fshptoaddr, @fsocoord, @fsoldaddr, @fsoldby, @fstate, @fstatus, @fterm, @fterr, @fzip, @fackmemo, @fmstreet, @fmusrmemo1, @fpriority, @festimator, @fnextenum, @fnextinum, @fsorev)";
+
+                            break;
+                        case SQLQueryStatement.SOUpdate:
+                            break;
+                        case SQLQueryStatement.SOLineInsert:
+                            retVal = "INSERT INTO soitem (finumber, fpartno, fpartrev, fsono, fllotreqd, fautocreat, fcas_bom, fcas_rtg, fcustpart, fcustptrev, fduedate, fenumber, fgroup, fmeasure, fmultiple, fnextinum, fnextrel, fnunder, fnover, fordertype, fprintmemo, fprodcl, fquantity, fsource, fdesc, fdescmemo, fac, fclotext, fstandpart, sfac, FcAltUM, FnAltQty, fcudrev) ";
+                            retVal = retVal + "VALUES (@finumber, @fpartno, @fpartrev, @fsono, @fllotreqd, @fautocreat, @fcas_bom, @fcas_rtg, @fcustpart, @fcustptrev, @fduedate, @fenumber, @fgroup, @fmeasure, @fmultiple, @fnextinum, @fnextrel, @fnunder, @fnover, @fordertype, @fprintmemo, @fprodcl, @fquantity, @fsource, @fdesc, @fdescmemo, @fac, @fclotext, @fstandpart, @sfac, @FcAltUM, @FnAltQty, @fcudrev)";
+
+                            break;
+                        case SQLQueryStatement.SOLineUpdate:
+                            break;
+                        case SQLQueryStatement.SORelInsert:
+                            retVal = "INSERT INTO sorels (fenumber, finumber, fpartno, fpartrev, frelease, fshptoaddr, fsono, fduedate, forderqty, fshpbefdue, fsplitshp, funetprice, flistaxabl, fdelivery, fpriority, fmasterrel, fbook, fnetprice, fcudrev) ";
+                            retVal = retVal + "VALUES (@fenumber, @finumber, @fpartno, @fpartrev, @frelease, @fshptoaddr, @fsono, @fduedate, @forderqty, @fshpbefdue, @fsplitshp, @funetprice, @flistaxabl, @fdelivery, @fpriority, @fmasterrel, @fbook, @fnetprice, @fcudrev)";
+
+                            break;
+                        case SQLQueryStatement.SORelUpdate:
+                            break;
+                    }
+                    break;
+            }
+
+            return retVal;
         }
     }
 }

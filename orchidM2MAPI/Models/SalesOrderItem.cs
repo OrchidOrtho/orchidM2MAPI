@@ -74,6 +74,7 @@ namespace orchidM2MAPI.Models
 
         public List<SalesOrderReleases> SalesOrderReleases { get; set; }
 
+        public bool IsNewLine { get; set; } // This flag is sent from Mendix if it's a new line that should be inserted rather than updated.
 
         private string padNumber3(string numberToPad, bool useZeros)
         {
