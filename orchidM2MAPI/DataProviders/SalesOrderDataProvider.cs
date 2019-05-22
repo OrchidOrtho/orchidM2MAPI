@@ -387,11 +387,11 @@ namespace orchidM2MAPI.DataProviders
                         break;
                     default:
 
-                        sQuerySOUpdate = "UPDATE somast fcustpono = @fcustpono, fackdate = @fackdate, fcanc_dt = @fcanc_dt, fduedate = @fduedate, ffob = @ffob, fshipvia = @fshipvia, fshptoaddr = @fshptoaddr, fstatus = @fstatus, fterm = @fterm, fpriority = @fpriority, fnextenum = @fnextenum, fnextinum = @fnextinum, fsorev = @fsorev WHERE fsono = @fsono";
+                        sQuerySOUpdate = "UPDATE somast SET fcustpono = @fcustpono, fackdate = @fackdate, fcanc_dt = @fcanc_dt, fduedate = @fduedate, ffob = @ffob, fshipvia = @fshipvia, fshptoaddr = @fshptoaddr, fstatus = @fstatus, fterm = @fterm, fpriority = @fpriority, fnextenum = @fnextenum, fnextinum = @fnextinum, fsorev = @fsorev WHERE fsono = @fsono";
 
-                        sQuerySOItemUpdate = "UPDATE soitem (fpartno = @fpartno, fpartrev = @fpartrev, fcustpart = @fcustpart, fcustptrev = @fcustptrev, fduedate = @fduedate, fgroup = @fgroup, fmeasure = @fmeasure, fmultiple = @fmultiple, fnextinum = @fnextinum, fnextrel = @fnextrel, fordertype = @fordertype, fprodcl = @fprodcl, fquantity = @fquantity, fdesc = @fdesc, fdescmemo = @fdescmemo, FcAltUM = @FcAltUM, FnAltQty = @FnAltQty, fcudrev = @fcudrev WHERE fsono = @fsono AND finumber = @finumber ";
+                        sQuerySOItemUpdate = "UPDATE soitem SET fpartno = @fpartno, fpartrev = @fpartrev, fcustpart = @fcustpart, fcustptrev = @fcustptrev, fduedate = @fduedate, fgroup = @fgroup, fmeasure = @fmeasure, fmultiple = @fmultiple, fnextinum = @fnextinum, fnextrel = @fnextrel, fordertype = @fordertype, fprodcl = @fprodcl, fquantity = @fquantity, fdesc = @fdesc, fdescmemo = @fdescmemo, FcAltUM = @FcAltUM, FnAltQty = @FnAltQty, fcudrev = @fcudrev WHERE fsono = @fsono AND finumber = @finumber ";
 
-                        sQuerySORelUpdate = "UPDATE sorels fpartno = @fpartno, fpartrev = @fpartrev, fshptoaddr = @fshptoaddr, fduedate = @fduedate, forderqty = @forderqty, fshpbefdue = @fshpbefdue, fsplitshp = @fsplitshp, funetprice = @funetprice, flistaxabl = @flistaxabl, fdelivery = @fdelivery, fpriority = @fpriority, fmasterrel = @fmasterrel, fbook = @fbook, fnetprice = @fnetprice, fcudrev = @fcudrev WHERE finumber = @finumber AND fsono = @fsono AND frelease = @frelease ";
+                        sQuerySORelUpdate = "UPDATE sorels SET fpartno = @fpartno, fpartrev = @fpartrev, fshptoaddr = @fshptoaddr, fduedate = @fduedate, forderqty = @forderqty, fshpbefdue = @fshpbefdue, fsplitshp = @fsplitshp, funetprice = @funetprice, flistaxabl = @flistaxabl, fdelivery = @fdelivery, fpriority = @fpriority, fmasterrel = @fmasterrel, fbook = @fbook, fnetprice = @fnetprice, fcudrev = @fcudrev WHERE finumber = @finumber AND fsono = @fsono AND frelease = @frelease ";
                         break;
                 }
 
@@ -400,6 +400,7 @@ namespace orchidM2MAPI.DataProviders
                 //Update the new Sales Order
                 conn.Execute(sQuerySOUpdate, new
                 {
+                    fsono = so.SalesOrderNo,
                     fcustpono = so.CustomerPONo.Truncate(20),
                     fackdate = so.AcknowledgedDate == null ? DateTime.Parse("1900-01-01 00:00:00.000") : so.AcknowledgedDate,
                     fcanc_dt = so.CancelledDate == null ? DateTime.Parse("1900-01-01 00:00:00.000") : so.CancelledDate,
@@ -468,6 +469,8 @@ namespace orchidM2MAPI.DataProviders
                         //Update the new Sales Order Line Item
                         conn.Execute(sQuerySOItemUpdate, new
                         {
+                            @fsono = so.SalesOrderNo,
+                            @finumber = line.InternalItemNo,
                             @fpartno = line.PartNo,
                             @fpartrev = line.PartRev,
                             @fcustpart = line.CustomerPartNo,
@@ -526,6 +529,9 @@ namespace orchidM2MAPI.DataProviders
                             //Update the new Sales Order Line Item
                             conn.Execute(sQuerySORelUpdate, new
                             {
+                                @fsono = so.SalesOrderNo,
+                                @finumber = line.InternalItemNo,
+                                @frelease = rel.ReleaseNo,
                                 @fpartno = line.PartNo,
                                 @fpartrev = line.PartRev,
                                 @fshptoaddr = rel.ShipToAddressKeyR,
