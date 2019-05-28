@@ -39,5 +39,14 @@ namespace orchidM2MAPI.Controllers
 
         }
 
+        [HttpPost]
+        [Route("")]
+        [ProducesResponseType(typeof(List<Employee>), 201)]
+        public async Task<ActionResult<List<Employee>>> UpsertEmployees([FromBody] Employee[] emps)
+        {
+            return await _employeeData.UpsertEmployees(emps);
+
+        }
+
     }
 }

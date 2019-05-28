@@ -88,6 +88,25 @@ namespace orchidM2MAPI.DataProviders
 
         }
 
+        public async Task<List<Employee>> UpsertEmployees(Employee[] employeeList)
+        {
+
+            using (var connection = Connection("Oracle"))
+            {
+                foreach (Employee emp in employeeList)
+                {
+                    //Insert or Update the Employee using a stored procedure
+                    connection.Execute("WorkdayUpsert", new { @workerId = emp.EmployeeId, @firstName = emp.FirstName, @lastName = emp.LastName }, commandType: CommandType.StoredProcedure);
+
+                }
+
+            }
+
+
+
+            return null;
+        }
     }
+
 }
 

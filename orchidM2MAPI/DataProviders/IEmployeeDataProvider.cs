@@ -10,5 +10,7 @@ namespace orchidM2MAPI.DataProviders
 
         Task<Employee> GetEmployee(string employeeno);
 
+        Task<List<Employee>> UpsertEmployees(Employee[] emps);
+
     }
 }
