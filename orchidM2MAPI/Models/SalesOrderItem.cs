@@ -71,6 +71,7 @@ namespace orchidM2MAPI.Models
         public string UserDefinedRev { get; set; }
         public float AlternateQuantity { get; set; }
         public string AlternateUnitOfMeasure { get; set; }
+        public string POLineNo { get; set; }
 
         public List<SalesOrderReleases> SalesOrderReleases { get; set; }
 

@@ -132,6 +132,7 @@ namespace orchidM2MAPI.DataProviders
         public async Task<SalesOrder> UpsertSalesOrder(string location, SalesOrder so)
         {
             IDbTransaction transaction;
+            bool NewInsert = false;
 
             try
             {
@@ -146,6 +147,7 @@ namespace orchidM2MAPI.DataProviders
                         {
                             //Insert
                             this.insertSO(location, so, connection, transaction);
+                            NewInsert = true;
                         }
                         else
                         {
@@ -160,6 +162,41 @@ namespace orchidM2MAPI.DataProviders
                         {
                             transaction.Commit();
                             connection.Close();
+
+                            //If Insert, need to insert into the custom tables
+                            if (NewInsert)
+                            {
+                                using (var connInsertEXT = Connection(location))
+                                {
+                                    connInsertEXT.Open();
+                                    using (transaction = connInsertEXT.BeginTransaction())
+                                    {
+                                        SalesOrder justAddedSO = this.SelectSO(location, so);
+
+                                        // Need to update any fields in the EXT tables based on the sales order sent from Mendix
+                                        // Currently there's only the PO Line number field in the items
+                                        foreach (SalesOrderItem i in so.SalesOrderLineItems)
+                                        {
+                                            justAddedSO.SalesOrderLineItems.FirstOrDefault(X => X.InternalItemNo == i.InternalItemNo).POLineNo = i.POLineNo;
+
+                                        }
+
+                                        this.insertSOExt(location, justAddedSO, connInsertEXT, transaction);
+
+                                        try
+                                        {
+                                            transaction.Commit();
+                                            connInsertEXT.Close();
+                                     
+                                        }
+                                        catch (Exception exEXTCommit)
+                                        {
+                                            transaction.Rollback();
+                                            throw exEXTCommit;
+                                        }
+                                    }
+                                }
+                            }
                         }
                         catch (Exception exCommit)
                         {
@@ -364,6 +401,72 @@ namespace orchidM2MAPI.DataProviders
             }
         }
 
+        private void insertSOExt(string location, SalesOrder so, IDbConnection conn, IDbTransaction trans)
+        {
+            try
+            {
+                string sQuerySOInsert = "";
+                string sQuerySOItemInsert = "";
+                string sQuerySORelInsert = "";
+
+                // Generate queries based on location
+                switch (location)
+                {
+                    case "072":
+                        //Syteline Query
+                        sQuerySOInsert = "";
+                        break;
+                    case "080":
+                        //Need different query for 7.5
+
+                        break;
+                    default:
+
+                        sQuerySOInsert = "INSERT INTO SOMAST_EXT (FKey_ID) VALuES (@FKey_ID) ";
+
+                        sQuerySOItemInsert = "INSERT INTO SOITEM_EXT (FKey_ID, CPOLINE) VALUES (@FKey_ID, @CPOLINE) ";
+
+                        sQuerySORelInsert = "INSERT INTO SORELS_EXT (FKey_ID) VALUES (@FKey_ID) ";
+
+                        break;
+                }
+
+
+                //Create the new Sales Order EXT
+                conn.Execute(sQuerySOInsert, new
+                {
+                    FKey_ID = so.SalesOrderId
+                }, transaction: trans);
+
+                foreach (SalesOrderItem line in so.SalesOrderLineItems)
+                {
+                    //Create the new Sales Order Line Item EXT
+                    conn.Execute(sQuerySOItemInsert, new
+                    {
+                        FKey_ID = line.SalesOrderItemId,
+                        CPOLINE = line.POLineNo
+
+                    }, transaction: trans);
+
+                    foreach (SalesOrderReleases rel in line.SalesOrderReleases)
+                    {
+                        //Create the new Sales Order Line Item
+                        conn.Execute(sQuerySORelInsert, new
+                        {
+                            FKey_ID = rel.SalesOrderReleaseId
+
+                        }, transaction: trans);
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.CreateLogger("error").Log(LogLevel.Error, ex.Message);
+
+            }
+        }
+
         private void updateSO(string location, SalesOrder so, IDbConnection conn, IDbTransaction trans)
         {
             try
@@ -371,8 +474,7 @@ namespace orchidM2MAPI.DataProviders
                 string sQuerySOUpdate = "";
                 string sQuerySOItemUpdate = "";
                 string sQuerySORelUpdate = "";
-                string sNextSONoQuery = "";
-                string sNextSONoUpdateQuery = "";
+                string sQuerySOItemEXTUpdate = "";
 
                 // Generate queries based on location
                 switch (location)
@@ -390,6 +492,8 @@ namespace orchidM2MAPI.DataProviders
                         sQuerySOUpdate = "UPDATE somast SET fcustpono = @fcustpono, fackdate = @fackdate, fcanc_dt = @fcanc_dt, fduedate = @fduedate, ffob = @ffob, fshipvia = @fshipvia, fshptoaddr = @fshptoaddr, fstatus = @fstatus, fterm = @fterm, fpriority = @fpriority, fnextenum = @fnextenum, fnextinum = @fnextinum, fsorev = @fsorev WHERE fsono = @fsono";
 
                         sQuerySOItemUpdate = "UPDATE soitem SET fpartno = @fpartno, fpartrev = @fpartrev, fcustpart = @fcustpart, fcustptrev = @fcustptrev, fduedate = @fduedate, fgroup = @fgroup, fmeasure = @fmeasure, fmultiple = @fmultiple, fnextinum = @fnextinum, fnextrel = @fnextrel, fordertype = @fordertype, fprodcl = @fprodcl, fquantity = @fquantity, fdesc = @fdesc, fdescmemo = @fdescmemo, FcAltUM = @FcAltUM, FnAltQty = @FnAltQty, fcudrev = @fcudrev WHERE fsono = @fsono AND finumber = @finumber ";
+
+                        sQuerySOItemEXTUpdate = "UPDATE SOITEM_EXT SET CPOLine = @CPOLine WHERE FKey_ID = @FKey_ID";
 
                         sQuerySORelUpdate = "UPDATE sorels SET fpartno = @fpartno, fpartrev = @fpartrev, fshptoaddr = @fshptoaddr, fduedate = @fduedate, forderqty = @forderqty, fshpbefdue = @fshpbefdue, fsplitshp = @fsplitshp, funetprice = @funetprice, flistaxabl = @flistaxabl, fdelivery = @fdelivery, fpriority = @fpriority, fmasterrel = @fmasterrel, fbook = @fbook, fnetprice = @fnetprice, fcudrev = @fcudrev WHERE finumber = @finumber AND fsono = @fsono AND frelease = @frelease ";
                         break;
@@ -490,6 +594,12 @@ namespace orchidM2MAPI.DataProviders
                             @FnAltQty = line.Quantity,
                             @fcudrev = line.PartRev
 
+                        }, transaction: trans);
+
+                        conn.Execute(sQuerySOItemEXTUpdate, new
+                        {
+                            @FKey_ID = line.SalesOrderItemId,
+                            @CPOLine = line.POLineNo
                         }, transaction: trans);
                     }
 
