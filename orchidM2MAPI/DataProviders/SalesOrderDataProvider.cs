@@ -217,6 +217,95 @@ namespace orchidM2MAPI.DataProviders
             }
         }
 
+        public async Task<SalesOrder> SalesOrderStatus(string location, SalesOrder so )
+        {
+            IDbTransaction transaction;
+            bool NewInsert = false;
+
+            try
+            {
+                isValid(so);
+
+                using (var connection = Connection(location))
+                {
+                    connection.Open();
+                    using (transaction = connection.BeginTransaction())
+                    {
+                        if (so.IsNew)
+                        {
+                            //Insert
+                            this.insertSO(location, so, connection, transaction);
+                            NewInsert = true;
+                        }
+                        else
+                        {
+                            //Update
+                            this.updateSO(location, so, connection, transaction);
+                        }
+
+                        //Update the costs
+                        this.setCosts(location, so, connection, transaction);
+
+                        try
+                        {
+                            transaction.Commit();
+                            connection.Close();
+
+                            //If Insert, need to insert into the custom tables
+                            if (NewInsert)
+                            {
+                                using (var connInsertEXT = Connection(location))
+                                {
+                                    connInsertEXT.Open();
+                                    using (transaction = connInsertEXT.BeginTransaction())
+                                    {
+                                        SalesOrder justAddedSO = this.SelectSO(location, so);
+
+                                        // Need to update any fields in the EXT tables based on the sales order sent from Mendix
+                                        // Currently there's only the PO Line number field in the items
+                                        foreach (SalesOrderItem i in so.SalesOrderLineItems)
+                                        {
+                                            justAddedSO.SalesOrderLineItems.FirstOrDefault(X => X.InternalItemNo == i.InternalItemNo).POLineNo = i.POLineNo;
+
+                                        }
+
+                                        this.insertSOExt(location, justAddedSO, connInsertEXT, transaction);
+
+                                        try
+                                        {
+                                            transaction.Commit();
+                                            connInsertEXT.Close();
+
+                                        }
+                                        catch (Exception exEXTCommit)
+                                        {
+                                            transaction.Rollback();
+                                            throw exEXTCommit;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception exCommit)
+                        {
+                            transaction.Rollback();
+                            throw exCommit;
+                        }
+                    }
+
+
+                }
+
+                return this.SelectSO(location, so);
+            }
+            catch (Exception ex)
+            {
+                _logger.CreateLogger("error").Log(LogLevel.Error, ex.Message);
+                return null;
+            }
+        }
+
+
         private void insertSO(string location, SalesOrder so, IDbConnection conn, IDbTransaction trans)
         {
             try
