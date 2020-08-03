@@ -39,5 +39,14 @@ namespace orchidM2MAPI.Controllers
         }
 
 
+        [HttpGet]
+        [Route("{location}/lot/{lotNo}")]
+        [ProducesResponseType(typeof(Part), 200)]
+        public async Task<ActionResult<Part>> GetPartFromLot(string location, string lotNo)
+        {
+            return await _jobData.GetPartFromLot(location, lotNo);
+        }
+
+
     }
 }
