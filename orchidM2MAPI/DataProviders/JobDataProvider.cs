@@ -165,6 +165,47 @@ namespace orchidM2MAPI.DataProviders
 
         }
 
+
+        public async Task<Part> GetPartFromLot(string location, string lotNo)
+        {
+            try
+            {
+                string sQuery = "";
+                string newLotNo = "";
+
+                // Retrieve item info based on lot number
+                switch (location)
+                {
+                    case "076":
+                    case "072":
+                        break;
+                    case "032":
+                        break;
+                    default:
+                        newLotNo = lotNo;
+
+                        sQuery = "SELECT  dbo.inmastx.fpartno AS PartNo, dbo.inmastx.frev AS PartRev, dbo.inmastx.fac AS Facility, dbo.inmastx.fgroup AS PartFamily FROM  dbo.qalotc INNER JOIN dbo.inmastx ON dbo.qalotc.fcpartno = dbo.inmastx.fpartno AND dbo.qalotc.fcpartrev = dbo.inmastx.frev AND dbo.qalotc.fac = dbo.inmastx.fac WHERE (dbo.qalotc.fclot = @lotNo) AND (dbo.qalotc.fctype = 'J')";
+                        break;
+                }
+
+                using (IDbConnection conn = Connection(location))
+                {
+                    conn.Open();
+                    var result = await conn.QueryAsync<Part>(sQuery, new { lotNo = newLotNo });
+
+                    return result.FirstOrDefault();
+                    //QueryFirstOrDefaultAsync
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+        }
+
+
     }
 }
 
