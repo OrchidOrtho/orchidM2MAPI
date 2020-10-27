@@ -10,5 +10,7 @@ namespace orchidM2MAPI.DataProviders
     {
         Task<List<Demand>> GetDemand(string location, string partNos);
 
+        Task<List<Demand>> GetDemandJSON(string location, List<Part> partNos);
+
     }
 }
