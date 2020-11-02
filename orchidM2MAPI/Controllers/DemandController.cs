@@ -32,12 +32,12 @@ namespace orchidM2MAPI.Controllers
 
 
         [HttpPost]
-        [Route("{location}/{partNos}")]
-        public async Task<ActionResult<List<Demand>>> GetDemandJSON(string location, List<Part> partNos)
+        [Route("{location}")]
+        public async Task<ActionResult<DemandHeader>> GetDemandHeader(string location, DemandHeader dh)
         {
 
 
-            return await _demandData.GetDemand(location, partList);
+            return await _demandData.GetDemandHeader(location, dh);
         }
     }
 }
